@@ -3,11 +3,14 @@ import api from '@/lib/api';
 import { useRestaurant } from '@/providers/restaurant-provider';
 
 interface CreateOrderPayload {
-  type: 'pickup' | 'delivery';
+  type: 'pickup' | 'delivery' | 'dine_in';
   items: { productId: string; quantity: number; comment?: string }[];
   customerAddress?: string;
   customerPhone?: string;
   customerNotes?: string;
+  sessionId?: string | null;
+  tableId?: string | null;
+  guestId?: string | null;
 }
 
 export function useCreateOrder() {

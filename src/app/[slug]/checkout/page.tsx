@@ -3,6 +3,7 @@
 import { useCartStore } from '@/stores/cart-store';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useCreateOrder } from '@/hooks/useCreateOrder';
+import { useDineInMode } from '@/hooks/useDineInMode';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ShoppingBag, MapPin, Phone, StickyNote, CheckCircle2, Loader2 } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, MapPin, Phone, StickyNote, CheckCircle2, Loader2, UtensilsCrossed } from 'lucide-react';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 
@@ -24,8 +25,8 @@ interface ApiError extends Error {
 }
 
 const checkoutSchema = z.object({
-  type: z.enum(['pickup', 'delivery']),
-  customerAddress: z.string().min(5, 'La dirección es obligatoria para delivery').optional().or(z.literal('')),
+  type: z.enum(['pickup', 'delivery', 'dine_in']),
+  customerAddress: z.string().optional().or(z.literal('')),
   customerPhone: z.string().optional(),
   customerNotes: z.string().optional(),
 }).refine((data) => {
@@ -43,6 +44,7 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 export default function CheckoutPage() {
   const { items, getTotal, clearCart, getItemCount } = useCartStore();
   const { restaurant, slug } = useRestaurant();
+  const { isDineIn, sessionId, tableId } = useDineInMode();
   const router = useRouter();
   const { mutate: createOrder, isPending } = useCreateOrder();
   const [isSuccess, setIsSuccess] = useState(false);
@@ -51,7 +53,7 @@ export default function CheckoutPage() {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      type: restaurant?.features?.pickup ? 'pickup' : 'delivery',
+      type: isDineIn ? 'dine_in' : (restaurant?.features?.pickup ? 'pickup' : 'delivery'),
     }
   });
 
@@ -82,6 +84,8 @@ export default function CheckoutPage() {
       customerAddress: values.customerAddress,
       customerPhone: values.customerPhone,
       customerNotes: values.customerNotes,
+      sessionId: isDineIn ? sessionId : null,
+      tableId: isDineIn ? tableId : null,
     };
 
     createOrder(payload, {
@@ -94,13 +98,9 @@ export default function CheckoutPage() {
           colors: ['#22c55e', '#10b981', '#3b82f6']
         });
         clearCart();
-        setTimeout(() => {
-          // In a real app, redirect to order status page
-          // router.push(`/${slug}/orders/${data.id}`);
-        }, 5000);
       },
       onError: (err: ApiError) => {
-        if (err.response?.status === 401) {
+        if (err.response?.status === 401 && !isDineIn) {
           router.push(`/${slug}/auth/login?returnUrl=/${slug}/checkout`);
         } else if (err.response?.status === 403) {
           setError("Debes registrarte en este restaurante primero");
@@ -119,29 +119,28 @@ export default function CheckoutPage() {
         </div>
         <h1 className="text-3xl font-bold mb-2">¡Pedido confirmado!</h1>
         <p className="text-gray-600 mb-8 max-w-md">
-          Gracias por tu compra. Tu pedido está siendo procesado y te avisaremos cuando esté listo.
+          {isDineIn 
+            ? "Tu pedido ha sido enviado a la cocina. Te avisaremos cuando esté listo en tu mesa."
+            : "Gracias por tu compra. Tu pedido está siendo procesado y te avisaremos cuando esté listo."}
         </p>
-        <div className="w-full max-w-md bg-gray-50 rounded-2xl p-6 border mb-8">
-          <h3 className="font-bold text-lg mb-4 text-left border-b pb-2">Resumen</h3>
-          <div className="space-y-3">
-            {items.map((item, i) => (
-              <div key={i} className="flex justify-between text-sm">
-                <span>{item.quantity}x {item.product.name}</span>
-                <span className="font-semibold">{formatPrice(item.product.price * item.quantity)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between font-bold text-lg pt-2 border-t mt-4">
-              <span>Total</span>
-              <span className="text-[var(--color-primary)]">{formatPrice(getTotal())}</span>
-            </div>
-          </div>
+        
+        <div className="flex flex-col w-full max-w-md gap-3">
+          <Button 
+            onClick={() => router.push(`/${slug}/menu`)}
+            className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-lg font-bold shadow-lg"
+          >
+            {isDineIn ? 'Pedir algo más' : 'Volver al menú'}
+          </Button>
+          {isDineIn && (
+            <Button 
+              variant="outline"
+              onClick={() => router.push(`/${slug}/session`)}
+              className="w-full h-14 rounded-2xl text-lg font-bold"
+            >
+              Ver estado de mis pedidos
+            </Button>
+          )}
         </div>
-        <Button 
-          onClick={() => router.push(`/${slug}/menu`)}
-          className="rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)] h-12 px-8"
-        >
-          Volver al menú
-        </Button>
       </div>
     );
   }
@@ -167,6 +166,19 @@ export default function CheckoutPage() {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Dine-in Info Badge */}
+          {isDineIn && (
+            <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
+                <UtensilsCrossed size={24} />
+              </div>
+              <div>
+                <p className="font-bold text-primary">Pedido para Mesa #{tableId}</p>
+                <p className="text-xs text-primary/70">Tu pedido se servirá directamente en tu mesa.</p>
+              </div>
+            </div>
+          )}
+
           {/* Order Summary Section */}
           <section className="bg-white rounded-2xl shadow-sm border p-6">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -176,16 +188,18 @@ export default function CheckoutPage() {
             <div className="space-y-4">
               {items.map((item) => (
                 <div key={item.product.id} className="flex gap-4">
-                  <div className="relative h-16 w-16 flex-shrink-0">
+                  <div className="relative h-16 w-16 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
                     {item.product.imageUrl ? (
                       <Image
                         src={item.product.imageUrl}
                         alt={item.product.name}
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-cover"
                       />
                     ) : (
-                      <div className="h-full w-full bg-gray-100 rounded-lg" />
+                      <div className="h-full w-full flex items-center justify-center">
+                        <ShoppingBag size={24} className="text-muted-foreground/30" />
+                      </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -202,40 +216,44 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* Delivery Type Section */}
-          <section className="bg-white rounded-2xl shadow-sm border p-6">
-            <h2 className="text-lg font-bold mb-4">Tipo de Entrega</h2>
-            <RadioGroup 
-              defaultValue={orderType}
-              onValueChange={(value) => setValue('type', value as 'pickup' | 'delivery')}
-              className="grid grid-cols-2 gap-4"
-            >
-              {restaurant?.features?.pickup && (
-                <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'pickup' ? 'border-[var(--color-primary)] bg-primary/5' : 'border-gray-100'}`}>
-                  <Label htmlFor="pickup" className="flex flex-col cursor-pointer">
-                    <span className="font-bold">Retiro en local</span>
-                    <span className="text-xs text-gray-500">Sin costo</span>
-                  </Label>
-                  <RadioGroupItem value="pickup" id="pickup" />
-                </div>
-              )}
-              {restaurant?.features?.delivery && (
-                <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'delivery' ? 'border-[var(--color-primary)] bg-primary/5' : 'border-gray-100'}`}>
-                  <Label htmlFor="delivery" className="flex flex-col cursor-pointer">
-                    <span className="font-bold">Delivery</span>
-                    <span className="text-xs text-gray-500">A tu puerta</span>
-                  </Label>
-                  <RadioGroupItem value="delivery" id="delivery" />
-                </div>
-              )}
-            </RadioGroup>
-          </section>
+          {/* Delivery Type Section - Hidden for Dine-in */}
+          {!isDineIn && (
+            <section className="bg-white rounded-2xl shadow-sm border p-6">
+              <h2 className="text-lg font-bold mb-4">Tipo de Entrega</h2>
+              <RadioGroup 
+                defaultValue={orderType}
+                onValueChange={(value) => setValue('type', value as 'pickup' | 'delivery')}
+                className="grid grid-cols-2 gap-4"
+              >
+                {restaurant?.features?.pickup && (
+                  <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'pickup' ? 'border-[var(--color-primary)] bg-primary/5' : 'border-gray-100'}`}>
+                    <Label htmlFor="pickup" className="flex flex-col cursor-pointer">
+                      <span className="font-bold">Retiro en local</span>
+                      <span className="text-xs text-gray-500">Sin costo</span>
+                    </Label>
+                    <RadioGroupItem value="pickup" id="pickup" />
+                  </div>
+                )}
+                {restaurant?.features?.delivery && (
+                  <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'delivery' ? 'border-[var(--color-primary)] bg-primary/5' : 'border-gray-100'}`}>
+                    <Label htmlFor="delivery" className="flex flex-col cursor-pointer">
+                      <span className="font-bold">Delivery</span>
+                      <span className="text-xs text-gray-500">A tu puerta</span>
+                    </Label>
+                    <RadioGroupItem value="delivery" id="delivery" />
+                  </div>
+                )}
+              </RadioGroup>
+            </section>
+          )}
 
           {/* Customer Info Section */}
           <section className="bg-white rounded-2xl shadow-sm border p-6 space-y-4">
-            <h2 className="text-lg font-bold mb-2">Información de Entrega</h2>
+            <h2 className="text-lg font-bold mb-2">
+              {isDineIn ? 'Notas del pedido' : 'Información de Entrega'}
+            </h2>
             
-            {orderType === 'delivery' && (
+            {!isDineIn && orderType === 'delivery' && (
               <div className="space-y-2">
                 <Label htmlFor="customerAddress" className="flex items-center gap-2">
                   <MapPin size={16} /> Dirección de entrega
@@ -252,27 +270,29 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone" className="flex items-center gap-2">
-                <Phone size={16} /> Teléfono (opcional)
-              </Label>
-              <Input
-                id="customerPhone"
-                type="tel"
-                placeholder="+56 9 1234 5678"
-                {...register('customerPhone')}
-              />
-            </div>
+            {!isDineIn && (
+              <div className="space-y-2">
+                <Label htmlFor="customerPhone" className="flex items-center gap-2">
+                  <Phone size={16} /> Teléfono (opcional)
+                </Label>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  placeholder="+56 9 1234 5678"
+                  {...register('customerPhone')}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="customerNotes" className="flex items-center gap-2">
-                <StickyNote size={16} /> Notas adicionales
+                <StickyNote size={16} /> {isDineIn ? '¿Alguna preferencia o alergia?' : 'Notas adicionales'}
               </Label>
               <Textarea
                 id="customerNotes"
-                placeholder="Indicaciones para el repartidor o el restaurante..."
+                placeholder={isDineIn ? "Ej: Sin cebolla, extra servilletas..." : "Indicaciones para el repartidor o el restaurante..."}
                 {...register('customerNotes')}
-                className="resize-none"
+                className="resize-none rounded-xl"
               />
             </div>
           </section>
@@ -281,7 +301,7 @@ export default function CheckoutPage() {
             <Button 
               type="submit"
               disabled={isPending}
-              className="w-full h-14 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)] opacity-90 hover:opacity-100 text-xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95"
+              className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
             >
               {isPending ? (
                 <>
