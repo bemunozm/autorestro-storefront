@@ -1,5 +1,6 @@
 import { RestaurantProvider } from '@/providers/restaurant-provider';
 import { DynamicTheme } from '@/providers/theme-provider';
+import { StorefrontHeader } from '@/components/layout/StorefrontHeader';
 
 export default async function RestaurantLayout({
   children,
@@ -13,7 +14,10 @@ export default async function RestaurantLayout({
   return (
     <RestaurantProvider slug={slug}>
       <DynamicTheme>
-        {children}
+        <StorefrontHeader />
+        <div className="flex-1">
+          {children}
+        </div>
       </DynamicTheme>
     </RestaurantProvider>
   );
