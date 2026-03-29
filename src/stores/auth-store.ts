@@ -1,3 +1,5 @@
+'use client';
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -12,7 +14,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, user: User | null) => void;
   logout: () => void;
 }
 
@@ -21,20 +23,23 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
-      isAuthenticated: true, // I will set this based on token presence
+      isAuthenticated: false,
       login: (token, user) => {
-        localStorage.setItem('auth_token', token);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_token', token);
+        }
         set({ user, token, isAuthenticated: true });
       },
       logout: () => {
-        localStorage.removeItem('auth_token');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token');
+        }
         set({ user: null, token: null, isAuthenticated: false });
       },
     }),
     { 
         name: 'autorestro-auth',
         onRehydrateStorage: () => {
-            // Ensure isAuthenticated is synced with token on rehydration
             return (rehydratedState) => {
               if (rehydratedState) {
                 rehydratedState.isAuthenticated = !!rehydratedState.token;

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useMenu } from '@/hooks/useMenu';
+import { useDineInMode } from '@/hooks/useDineInMode';
 import { CategoryTabs } from '@/components/menu/CategoryTabs';
 import { ProductCard } from '@/components/menu/ProductCard';
 import { FloatingCartButton } from '@/components/menu/FloatingCartButton';
@@ -10,12 +11,14 @@ import { ChevronLeft, Search, UtensilsCrossed } from 'lucide-react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 export default function MenuPage() {
   const params = useParams();
   const slug = params.slug as string;
   const router = useRouter();
   const { data: menuData, isLoading } = useMenu(slug);
+  const { isDineIn, tableId } = useDineInMode();
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -94,6 +97,24 @@ export default function MenuPage() {
           </h1>
         </div>
       </header>
+
+      {/* Dine-in Banner */}
+      {isDineIn && (
+        <div className="bg-primary px-4 py-2 flex items-center justify-between shadow-sm sticky top-16 z-20 transition-all">
+          <div className="flex items-center gap-2 text-white">
+            <Badge variant="outline" className="bg-white/20 text-white border-none rounded-lg px-2 py-1 flex items-center gap-1.5 font-bold">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              Mesa #{tableId}
+            </Badge>
+          </div>
+          <button 
+            onClick={() => router.push(`/${slug}/session`)}
+            className="text-[10px] font-bold text-white uppercase tracking-wider bg-black/10 px-3 py-1.5 rounded-full hover:bg-black/20 transition-colors flex items-center gap-1"
+          >
+            Ver Mesa
+          </button>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full">
