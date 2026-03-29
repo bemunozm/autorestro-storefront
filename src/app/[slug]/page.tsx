@@ -1,66 +1,49 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRestaurant } from '@/providers/restaurant-provider';
-import Image from 'next/image';
+import { templateRegistry } from '@/templates/registry';
 
 export default function StorefrontHome() {
   const { restaurant, isLoading } = useRestaurant();
   
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
-  if (!restaurant) return <div className="flex items-center justify-center min-h-screen"><p>Restaurante no encontrado</p></div>;
-  
-  return (
-    <div className="min-h-screen">
-      <header className="relative h-64 bg-gray-900">
-        {restaurant.coverImageUrl && (
-          <Image 
-            src={restaurant.coverImageUrl} 
-            alt={restaurant.name} 
-            fill 
-            className="object-cover opacity-60" 
-            priority
-          />
-        )}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white relative">
-            {restaurant.logoUrl && (
-              <div className="h-20 w-20 mx-auto mb-4 relative">
-                <Image 
-                  src={restaurant.logoUrl} 
-                  alt={restaurant.name} 
-                  fill 
-                  className="object-contain" 
-                />
-              </div>
-            )}
-            <h1 className="text-4xl font-bold">{restaurant.name}</h1>
-            {restaurant.description && <p className="mt-2 text-lg opacity-90">{restaurant.description}</p>}
-          </div>
-        </div>
-      </header>
-      <main className="max-w-4xl mx-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {restaurant.features?.dineIn && <FeatureCard icon="🍽️" title="Comer en local" />}
-          {restaurant.features?.pickup && <FeatureCard icon="🥡" title="Retiro en local" />}
-          {restaurant.features?.delivery && <FeatureCard icon="🛵" title="Delivery" />}
-        </div>
-        <div className="mt-8 text-center">
-          <a href={`/${restaurant.slug}/menu`} className="inline-block px-8 py-3 rounded-full text-white font-semibold text-lg" style={{ backgroundColor: restaurant.primaryColor || '#000' }}>
-            Ver Menú
-          </a>
-        </div>
-        {restaurant.address && <p className="mt-6 text-center text-gray-500">📍 {restaurant.address}</p>}
-        {restaurant.phone && <p className="text-center text-gray-500">📞 {restaurant.phone}</p>}
-      </main>
-    </div>
-  );
-}
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="animate-spin h-12 w-12 border-4 border-[var(--theme-primary,#111)] border-t-transparent rounded-full shadow-2xl" />
+      </div>
+    );
+  }
 
-function FeatureCard({ icon, title }: { icon: string; title: string }) {
+  if (!restaurant) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="text-center space-y-4">
+          <p className="text-2xl font-black text-gray-300 dark:text-zinc-800 uppercase tracking-widest">Error 404</p>
+          <p className="text-lg font-medium text-gray-500">Restaurante no encontrado</p>
+          <div className="h-px w-12 bg-gray-200 dark:bg-zinc-800 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+  
+  const landingConfig = restaurant.landingConfig;
+  const templateName = landingConfig?.template || 'hero-centered';
+  
+  // Resolve template component, fallback to hero-centered
+  const TemplateComponent = templateRegistry[templateName] || templateRegistry['hero-centered'];
+
   return (
-    <div className="p-6 rounded-xl border text-center hover:shadow-lg transition">
-      <span className="text-3xl">{icon}</span>
-      <p className="mt-2 font-medium">{title}</p>
-    </div>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="animate-spin h-8 w-8 border-4 border-[var(--theme-primary,#111)] border-t-transparent rounded-full" />
+      </div>
+    }>
+      <TemplateComponent 
+        restaurant={restaurant} 
+        sections={landingConfig?.sections} 
+        theme={landingConfig?.theme}
+      />
+    </Suspense>
   );
 }
