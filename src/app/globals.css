@@ -10,8 +10,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--theme-font, var(--font-geist-sans));
   --font-mono: var(--font-geist-mono);
+  --color-primary: var(--theme-primary, #000);
+  --color-secondary: var(--theme-secondary, #666);
+  --color-accent: var(--theme-accent, #ff0000);
+  --radius-theme: var(--theme-radius, 0.5rem);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,5 +28,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--theme-font, Arial, Helvetica, sans-serif);
 }
