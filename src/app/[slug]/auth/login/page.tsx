@@ -120,11 +120,17 @@ export default function LoginPage() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center border-t py-4">
+          <CardFooter className="flex flex-col items-center gap-3 border-t py-4">
+            <Link
+              href={`/${slug}/auth/forgot-password`}
+              className="text-sm text-gray-500 hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
             <p className="text-sm text-gray-600">
               ¿No tienes una cuenta?{' '}
-              <Link 
-                href={`/${slug}/auth/register`} 
+              <Link
+                href={`/${slug}/auth/register`}
                 className="font-medium hover:underline"
                 style={{ color: 'var(--color-primary)' }}
               >
