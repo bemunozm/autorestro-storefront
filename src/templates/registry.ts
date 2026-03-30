@@ -6,6 +6,7 @@ export const templateRegistry: Record<string, ComponentType<TemplateProps>> = {
   'split-layout': lazy(() => import('./split-layout')),
   'minimal': lazy(() => import('./minimal')),
   'premium-restaurant': lazy(() => import('./premium-restaurant')),
+  'custom-shinesushi': lazy(() => import('./custom-shinesushi')),
 };
 
 export type TemplateName = keyof typeof templateRegistry;

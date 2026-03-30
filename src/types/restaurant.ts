@@ -13,6 +13,7 @@ export interface Restaurant {
   features?: { delivery?: boolean; pickup?: boolean; dineIn?: boolean };
   isPro?: boolean;
   landingConfig?: LandingConfig;
+  assignedTemplates?: string[];
 }
 
 export interface LandingConfig {
