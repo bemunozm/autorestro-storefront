@@ -20,6 +20,32 @@ export function useThemeConfig() {
   return context;
 }
 
+/**
+ * Sanitize user-provided CSS to prevent XSS injection vectors.
+ * Blocks: script tags, javascript: URIs, IE expressions, @import (data exfil),
+ * url(data:) and url(javascript:), -moz-binding, behavior (IE), and HTML tags.
+ * Uses textContent (not innerHTML) to prevent HTML parsing of the CSS string.
+ */
+function sanitizeCSS(css: string): string {
+  return css
+    // Strip any HTML tags entirely
+    .replace(/<[^>]*>/gim, '')
+    // Block javascript: protocol in any context
+    .replace(/javascript\s*:/gim, '/* blocked */')
+    // Block IE expression() and legacy -ms-filter expressions
+    .replace(/expression\s*\(/gim, '/* blocked */(')
+    // Block @import to prevent data exfiltration and external stylesheet injection
+    .replace(/@import\b/gim, '/* @import blocked */')
+    // Block url() with data: or javascript: schemes
+    .replace(/url\s*\(\s*['"]?\s*(data|javascript)\s*:/gim, 'url(/* blocked */:')
+    // Block -moz-binding (Firefox XBL injection, legacy but still worth blocking)
+    .replace(/-moz-binding\s*:/gim, '/* blocked */:')
+    // Block behavior: (IE .htc component injection)
+    .replace(/behavior\s*:/gim, '/* blocked */:')
+    // Block -o-link and -o-link-source (Opera legacy)
+    .replace(/-o-link(-source)?\s*:/gim, '/* blocked */:');
+}
+
 export function DynamicTheme({ children }: { children: ReactNode }) {
   const { restaurant } = useRestaurant();
   const theme = restaurant?.landingConfig?.theme;
@@ -85,13 +111,8 @@ export function DynamicTheme({ children }: { children: ReactNode }) {
         document.head.appendChild(style);
       }
       
-      // Basic CSS safety sanitization
-      const safeCSS = theme.customCSS
-        .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, '')
-        .replace(/javascript:/gim, '')
-        .replace(/expression\(/gim, '');
-        
-      style.innerHTML = safeCSS;
+      const safeCSS = sanitizeCSS(theme.customCSS);
+      style.textContent = safeCSS;
     } else {
       document.getElementById('dynamic-custom-css')?.remove();
     }
