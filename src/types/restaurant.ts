@@ -11,7 +11,9 @@ export interface Restaurant {
   phone?: string;
   openingHours?: Record<string, unknown>;
   features?: { delivery?: boolean; pickup?: boolean; dineIn?: boolean };
+  isPro?: boolean;
   landingConfig?: LandingConfig;
+  assignedTemplates?: string[];
 }
 
 export interface LandingConfig {
