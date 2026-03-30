@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { SectionProps } from '../../types';
@@ -24,6 +24,20 @@ const DEFAULT_IMAGES: GalleryImage[] = [
 export function PremiumGallery({ content }: SectionProps) {
   const rawImages = content.images as string[] | GalleryImage[] | undefined;
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  // Accessibility: lock scroll and handle Escape when lightbox is open
+  useEffect(() => {
+    if (!lightboxSrc) return;
+    document.body.style.overflow = 'hidden';
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxSrc(null);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [lightboxSrc]);
 
   const images: GalleryImage[] = rawImages && rawImages.length > 0
     ? (rawImages as string[]).map((src, i) => ({
