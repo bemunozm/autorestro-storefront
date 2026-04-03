@@ -4,8 +4,10 @@ import Image from 'next/image';
 import { TemplateProps } from '../types';
 import * as Sections from '../sections';
 import { ScrollReveal } from '../sections/ScrollReveal';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export default function SplitLayoutTemplate({ restaurant }: TemplateProps) {
+  const { basePath } = useRestaurant();
   const image = restaurant.coverImageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000';
 
   return (
@@ -40,7 +42,7 @@ export default function SplitLayoutTemplate({ restaurant }: TemplateProps) {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start">
                   <a
-                    href={`/${restaurant.slug}/menu`}
+                    href={`${basePath}/menu`}
                     className="px-12 py-6 bg-[var(--theme-primary)] text-white font-black text-2xl rounded-2xl hover:scale-110 active:scale-95 transition-all shadow-2xl hover:shadow-[var(--theme-primary)]/40 text-center"
                   >
                     Ver Menú
@@ -91,7 +93,7 @@ export default function SplitLayoutTemplate({ restaurant }: TemplateProps) {
               <div>
                 <h4 className="font-black text-gray-900 dark:text-white mb-8 uppercase text-xs tracking-[0.2em] opacity-50">Explora</h4>
                 <ul className="space-y-5 text-gray-500 dark:text-gray-400 font-bold">
-                   <li><a href={`/${restaurant.slug}/menu`} className="hover:text-[var(--theme-primary)] transition-colors">Nuestra Carta</a></li>
+                   <li><a href={`${basePath}/menu`} className="hover:text-[var(--theme-primary)] transition-colors">Nuestra Carta</a></li>
                    <li><a href="#ubicacion" className="hover:text-[var(--theme-primary)] transition-colors">Dónde Estamos</a></li>
                    <li><a href="#" className="hover:text-[var(--theme-primary)] transition-colors">Gift Cards</a></li>
                 </ul>

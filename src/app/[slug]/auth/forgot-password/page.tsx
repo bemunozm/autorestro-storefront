@@ -24,7 +24,7 @@ type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 export default function ForgotPasswordPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
     try {
       await api.post('/auth/forgot-password', {
         email: data.email,
-        redirectUrl: `${window.location.origin}/${slug}`,
+        redirectUrl: `${window.location.origin}${basePath}`,
       });
       setSuccess(true);
     } catch {
@@ -113,7 +113,7 @@ export default function ForgotPasswordPage() {
           </CardContent>
           <CardFooter className="flex justify-center border-t py-4">
             <Link
-              href={`/${slug}/auth/login`}
+              href={`${basePath}/auth/login`}
               className="text-sm font-medium hover:underline"
               style={{ color: 'var(--color-primary)' }}
             >

@@ -10,6 +10,7 @@ interface RestaurantContextType {
   isLoading: boolean;
   error: Error | null;
   slug: string;
+  basePath: string;
 }
 
 const RestaurantContext = createContext<RestaurantContextType>({
@@ -17,13 +18,14 @@ const RestaurantContext = createContext<RestaurantContextType>({
   isLoading: true,
   error: null,
   slug: '',
+  basePath: '',
 });
 
 export function useRestaurant() {
   return useContext(RestaurantContext);
 }
 
-export function RestaurantProvider({ slug, children }: { slug: string; children: ReactNode }) {
+export function RestaurantProvider({ slug, basePath, children }: { slug: string; basePath: string; children: ReactNode }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['restaurant-config', slug],
     queryFn: () => api.get<Restaurant>(`/storefront/${slug}/config`).then(r => r.data),
@@ -32,7 +34,7 @@ export function RestaurantProvider({ slug, children }: { slug: string; children:
   });
 
   return (
-    <RestaurantContext.Provider value={{ restaurant: data ?? null, isLoading, error: error as Error | null, slug }}>
+    <RestaurantContext.Provider value={{ restaurant: data ?? null, isLoading, error: error as Error | null, slug, basePath }}>
       {children}
     </RestaurantContext.Provider>
   );

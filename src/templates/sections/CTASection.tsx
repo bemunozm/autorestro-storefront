@@ -2,8 +2,10 @@
 
 import { SectionProps } from '../types';
 import { ScrollReveal } from './ScrollReveal';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export function CTASection({ restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   return (
     <section className="relative py-32 px-6 overflow-hidden bg-[var(--theme-primary,#111)]">
       {/* Dynamic Background Effects */}
@@ -28,7 +30,7 @@ export function CTASection({ restaurant }: SectionProps) {
         <ScrollReveal direction="up" delay={400}>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <a
-              href={`/${restaurant.slug}/menu`}
+              href={`${basePath}/menu`}
               className="w-full sm:w-auto px-12 py-6 bg-white text-[var(--theme-primary,#000)] font-black text-2xl rounded-[var(--theme-radius,1rem)] hover:scale-110 active:scale-95 transition-all shadow-2xl hover:shadow-white/20 text-center"
             >
               ¡Ver Menú ahora!

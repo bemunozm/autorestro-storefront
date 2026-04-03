@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useOrders } from '@/hooks/useOrders';
+import { useRestaurant } from '@/providers/restaurant-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ const STATUS_CONFIG = {
 
 export default function OrdersPage() {
   const { slug } = useParams();
+  const { basePath } = useRestaurant();
   const { data: orders, isLoading } = useOrders();
 
   if (isLoading) {
@@ -39,7 +41,7 @@ export default function OrdersPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Mis Pedidos</h1>
-          <Link href={`/${slug}/menu`}>
+          <Link href={`${basePath}/menu`}>
             <Button variant="ghost" className="text-gray-500 hover:text-gray-700">
               Ir al Menú
             </Button>
@@ -53,7 +55,7 @@ export default function OrdersPage() {
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">No tienes pedidos aún</h2>
             <p className="text-gray-500 mb-6 max-w-xs">¡Explora nuestro menú y realiza tu primer pedido!</p>
-            <Link href={`/${slug}/menu`}>
+            <Link href={`${basePath}/menu`}>
               <Button className="rounded-xl px-8" style={{ backgroundColor: 'var(--color-primary)' }}>
                 Explorar Menú
               </Button>
@@ -62,7 +64,7 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-4">
             {sortedOrders.map((order: Order) => (
-              <Link key={order.id} href={`/${slug}/order/${order.id}`}>
+              <Link key={order.id} href={`${basePath}/order/${order.id}`}>
                 <Card className="shadow-sm border-none rounded-2xl hover:shadow-md transition-shadow duration-200">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border">

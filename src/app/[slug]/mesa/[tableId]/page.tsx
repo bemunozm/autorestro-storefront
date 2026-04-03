@@ -30,7 +30,7 @@ export default function TableJoinPage() {
   const slug = params.slug as string;
   const tableId = params.tableId as string;
   const router = useRouter();
-  const { restaurant, isLoading: isLoadingRest } = useRestaurant();
+  const { restaurant, isLoading: isLoadingRest, basePath } = useRestaurant();
   const { setTable, setSession } = useSessionStore();
   const { login } = useAuthStore();
 
@@ -81,7 +81,7 @@ export default function TableJoinPage() {
         localStorage.setItem('auth_token', guestToken);
       }
 
-      router.push(`/${slug}/menu`);
+      router.push(`${basePath}/menu`);
     } catch (error) {
       console.error('Error opening session:', error);
     } finally {
@@ -104,7 +104,7 @@ export default function TableJoinPage() {
         localStorage.setItem('auth_token', guestToken);
       }
 
-      router.push(`/${slug}/menu`);
+      router.push(`${basePath}/menu`);
     } catch (error) {
       console.error('Error joining session:', error);
     } finally {

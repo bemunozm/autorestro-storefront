@@ -29,8 +29,8 @@ export default function LoginPage() {
   const slug = params.slug as string;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') || `/${slug}/menu`;
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
+  const returnUrl = searchParams.get('returnUrl') || `${basePath}/menu`;
   const { login } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -122,7 +122,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col items-center gap-3 border-t py-4">
             <Link
-              href={`/${slug}/auth/forgot-password`}
+              href={`${basePath}/auth/forgot-password`}
               className="text-sm text-gray-500 hover:underline"
             >
               ¿Olvidaste tu contraseña?
@@ -130,7 +130,7 @@ export default function LoginPage() {
             <p className="text-sm text-gray-600">
               ¿No tienes una cuenta?{' '}
               <Link
-                href={`/${slug}/auth/register`}
+                href={`${basePath}/auth/register`}
                 className="font-medium hover:underline"
                 style={{ color: 'var(--color-primary)' }}
               >
