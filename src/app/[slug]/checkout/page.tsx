@@ -43,7 +43,7 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export default function CheckoutPage() {
   const { items, getTotal, clearCart, getItemCount } = useCartStore();
-  const { restaurant, slug } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const { isDineIn, sessionId, tableId } = useDineInMode();
   const router = useRouter();
   const { mutate: createOrder, isPending } = useCreateOrder();
@@ -61,9 +61,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (getItemCount() === 0 && !isSuccess) {
-      router.push(`/${slug}/menu`);
+      router.push(`${basePath}/menu`);
     }
-  }, [items, router, slug, getItemCount, isSuccess]);
+  }, [items, router, basePath, getItemCount, isSuccess]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -101,7 +101,7 @@ export default function CheckoutPage() {
       },
       onError: (err: ApiError) => {
         if (err.response?.status === 401 && !isDineIn) {
-          router.push(`/${slug}/auth/login?returnUrl=/${slug}/checkout`);
+          router.push(`${basePath}/auth/login?returnUrl=${basePath}/checkout`);
         } else if (err.response?.status === 403) {
           setError("Debes registrarte en este restaurante primero");
         } else {
@@ -126,7 +126,7 @@ export default function CheckoutPage() {
         
         <div className="flex flex-col w-full max-w-md gap-3">
           <Button 
-            onClick={() => router.push(`/${slug}/menu`)}
+            onClick={() => router.push(`${basePath}/menu`)}
             className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-lg font-bold shadow-lg"
           >
             {isDineIn ? 'Pedir algo más' : 'Volver al menú'}
@@ -134,7 +134,7 @@ export default function CheckoutPage() {
           {isDineIn && (
             <Button 
               variant="outline"
-              onClick={() => router.push(`/${slug}/session`)}
+              onClick={() => router.push(`${basePath}/session`)}
               className="w-full h-14 rounded-2xl text-lg font-bold"
             >
               Ver estado de mis pedidos

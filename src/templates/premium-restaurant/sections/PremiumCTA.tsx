@@ -3,8 +3,10 @@
 import { ArrowRight, TrendingUp } from 'lucide-react';
 import { SectionProps } from '../../types';
 import { ScrollReveal } from '../../sections/ScrollReveal';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export function PremiumCTA({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const headline = (content.headline as string) || '¿Listo para vivir la fusión?';
   const subtext = (content.subtext as string) || 'Sushi, ceviches y tiraditos con el alma nikkei que Iquique nunca había probado.';
   const ctaText = (content.ctaText as string) || 'Ver Menú Completo';
@@ -45,7 +47,7 @@ export function PremiumCTA({ content, restaurant }: SectionProps) {
         <ScrollReveal direction="up" delay={300}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
-              href={`/${restaurant.slug}/menu`}
+              href={`${basePath}/menu`}
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 min-h-[56px] px-10 py-4 bg-white font-black text-lg rounded-[var(--theme-radius,0.5rem)] transition-all duration-300 hover:scale-105 active:scale-95 shadow-2xl"
               style={{ color: 'var(--theme-accent, #EA580C)' }}
             >

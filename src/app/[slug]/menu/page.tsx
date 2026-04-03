@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useMenu } from '@/hooks/useMenu';
 import { useDineInMode } from '@/hooks/useDineInMode';
+import { useRestaurant } from '@/providers/restaurant-provider';
 import { CategoryTabs } from '@/components/menu/CategoryTabs';
 import { ProductCard } from '@/components/menu/ProductCard';
 import { FloatingCartButton } from '@/components/menu/FloatingCartButton';
@@ -17,6 +18,7 @@ export default function MenuPage() {
   const params = useParams();
   const slug = params.slug as string;
   const router = useRouter();
+  const { basePath } = useRestaurant();
   const { data: menuData, isLoading } = useMenu(slug);
   const { isDineIn, tableId } = useDineInMode();
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
@@ -72,7 +74,7 @@ export default function MenuPage() {
       {/* Header */}
       <header className="h-16 border-b bg-white flex items-center px-4 gap-4 sticky top-0 z-30 shadow-sm">
         <button 
-          onClick={() => router.push(`/${slug}`)}
+          onClick={() => router.push(basePath || '/')}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
           <ChevronLeft size={24} />
@@ -108,7 +110,7 @@ export default function MenuPage() {
             </Badge>
           </div>
           <button 
-            onClick={() => router.push(`/${slug}/session`)}
+            onClick={() => router.push(`${basePath}/session`)}
             className="text-[10px] font-bold text-white uppercase tracking-wider bg-black/10 px-3 py-1.5 rounded-full hover:bg-black/20 transition-colors flex items-center gap-1"
           >
             Ver Mesa

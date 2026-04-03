@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useDineInMode } from '@/hooks/useDineInMode';
 import { useCartStore } from '@/stores/cart-store';
@@ -19,10 +19,9 @@ import {
 } from '@/components/ui/sheet';
 
 export function StorefrontHeader() {
-  const { slug } = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const { isDineIn, tableId } = useDineInMode();
   const { getItemCount } = useCartStore();
   const { isAuthenticated, user, logout } = useAuthStore();
@@ -32,19 +31,19 @@ export function StorefrontHeader() {
   const navLinks = useMemo(() => {
     if (isDineIn) {
       return [
-        { name: 'Menú', href: `/${slug}/menu`, icon: UtensilsCrossed },
-        { name: 'Pedidos Mesa', href: `/${slug}/session`, icon: ShoppingBag },
+        { name: 'Menú', href: `${basePath}/menu`, icon: UtensilsCrossed },
+        { name: 'Pedidos Mesa', href: `${basePath}/session`, icon: ShoppingBag },
       ];
     }
     return [
-      { name: 'Menú', href: `/${slug}/menu`, icon: UtensilsCrossed },
-      { name: 'Mis Pedidos', href: `/${slug}/orders`, icon: ShoppingBag },
+      { name: 'Menú', href: `${basePath}/menu`, icon: UtensilsCrossed },
+      { name: 'Mis Pedidos', href: `${basePath}/orders`, icon: ShoppingBag },
     ];
-  }, [isDineIn, slug]);
+  }, [isDineIn, basePath]);
 
   const handleLogout = () => {
     logout();
-    router.push(`/${slug}`);
+    router.push(basePath || '/');
   };
 
   return (
@@ -89,7 +88,7 @@ export function StorefrontHeader() {
                 ))}
                 {!isDineIn && !isAuthenticated && (
                   <Link
-                    href={`/${slug}/auth/login`}
+                    href={`${basePath}/auth/login`}
                     className="flex items-center gap-3 p-4 rounded-2xl hover:bg-muted font-bold mt-4"
                   >
                     <User className="h-5 w-5" />
@@ -111,7 +110,7 @@ export function StorefrontHeader() {
         </div>
 
         {/* Logo & Name */}
-        <Link href={`/${slug}`} className="flex items-center gap-2.5 flex-1 lg:flex-none truncate">
+        <Link href={basePath || '/'} className="flex items-center gap-2.5 flex-1 lg:flex-none truncate">
           <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary overflow-hidden shrink-0">
             {restaurant?.logoUrl ? (
               <img src={restaurant.logoUrl} alt="" className="w-full h-full object-cover" />
@@ -156,7 +155,7 @@ export function StorefrontHeader() {
                   variant="ghost" 
                   size="sm" 
                   className="rounded-full gap-2 font-bold hover:bg-muted"
-                  onClick={() => router.push(`/${slug}/orders`)}
+                  onClick={() => router.push(`${basePath}/orders`)}
                 >
                   <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs">
                     {user?.name.charAt(0).toUpperCase()}
@@ -164,7 +163,7 @@ export function StorefrontHeader() {
                   <span className="hidden xl:inline">{user?.name}</span>
                 </Button>
               ) : (
-                <Button variant="ghost" size="sm" className="rounded-full font-bold" onClick={() => router.push(`/${slug}/auth/login`)}>
+                <Button variant="ghost" size="sm" className="rounded-full font-bold" onClick={() => router.push(`${basePath}/auth/login`)}>
                   Entrar
                 </Button>
               )}
@@ -177,13 +176,13 @@ export function StorefrontHeader() {
                 variant="ghost"
                 size="icon"
                 className="rounded-full lg:flex hidden"
-                onClick={() => router.push(`/${slug}/session`)}
+                onClick={() => router.push(`${basePath}/session`)}
               >
                 <Bell size={20} className="text-muted-foreground" />
               </Button>
             )}
             
-            <Link href={`/${slug}/checkout`}>
+            <Link href={`${basePath}/checkout`}>
               <Button size="icon" className="rounded-full w-10 h-10 shadow-lg shadow-primary/20 relative group overflow-visible">
                 <ShoppingBag size={20} />
                 {cartCount > 0 && (

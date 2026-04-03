@@ -4,8 +4,10 @@ import Image from 'next/image';
 import { ChevronDown, Star } from 'lucide-react';
 import { SectionProps } from '../../types';
 import { SHINE_COLORS } from '../data/defaults';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export function ShineSushiHero({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const title = (content.title as string | undefined) || restaurant.name;
   const subtitle = (content.subtitle as string | undefined) || 'Restobar & Delivery · Fusión Nikkei';
   const ctaPrimaryText = (content.ctaPrimaryText as string) || 'Ver Menú';
@@ -120,7 +122,7 @@ export function ShineSushiHero({ content, restaurant }: SectionProps) {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <a
-            href={`/${restaurant.slug}/menu`}
+            href={`${basePath}/menu`}
             className="w-full sm:w-auto min-h-[52px] px-10 py-4 font-bold text-lg text-white rounded-sm transition-all duration-300 hover:scale-105 active:scale-95 text-center tracking-wider uppercase"
             style={{
               backgroundColor: SHINE_COLORS.orange,

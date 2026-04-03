@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { SectionProps } from '../../types';
 import { ScrollReveal } from '../../sections/ScrollReveal';
+import { useRestaurant } from '@/providers/restaurant-provider';
 import { MenuHighlightsContent, MenuDish } from '../../types';
 
 const DEFAULT_DISHES: MenuDish[] = [
@@ -40,6 +41,7 @@ const DEFAULT_DISHES: MenuDish[] = [
 ];
 
 export function MenuHighlights({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const typedContent = content as unknown as Partial<MenuHighlightsContent>;
   const dishes = typedContent.dishes && typedContent.dishes.length > 0 ? typedContent.dishes : DEFAULT_DISHES;
   const title = typedContent.title || 'Platos Destacados';
@@ -111,7 +113,7 @@ export function MenuHighlights({ content, restaurant }: SectionProps) {
         {/* CTA */}
         <ScrollReveal direction="up" delay={300} className="text-center mt-10">
           <a
-            href={`/${restaurant.slug}/menu`}
+            href={`${basePath}/menu`}
             className="inline-flex items-center gap-3 px-8 py-4 rounded-[var(--theme-radius,0.5rem)] font-bold text-white text-lg transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl group"
             style={{
               background: 'var(--theme-accent, #EA580C)',

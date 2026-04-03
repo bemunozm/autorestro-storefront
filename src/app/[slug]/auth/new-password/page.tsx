@@ -31,7 +31,7 @@ export default function NewPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,7 @@ export default function NewPasswordPage() {
         password: data.password,
       });
       setSuccess(true);
-      setTimeout(() => router.push(`/${slug}/auth/login`), 2000);
+      setTimeout(() => router.push(`${basePath}/auth/login`), 2000);
     } catch {
       setError('El enlace es inválido o ha expirado. Solicita uno nuevo.');
     } finally {
@@ -68,7 +68,7 @@ export default function NewPasswordPage() {
               <p className="text-sm text-gray-600 mb-4">
                 El enlace de recuperación no es válido o ya expiró.
               </p>
-              <Link href={`/${slug}/auth/forgot-password`}>
+              <Link href={`${basePath}/auth/forgot-password`}>
                 <Button
                   className="w-full text-white"
                   style={{ backgroundColor: 'var(--color-primary)' }}
@@ -156,7 +156,7 @@ export default function NewPasswordPage() {
           </CardContent>
           <CardFooter className="flex justify-center border-t py-4">
             <Link
-              href={`/${slug}/auth/login`}
+              href={`${basePath}/auth/login`}
               className="text-sm font-medium hover:underline"
               style={{ color: 'var(--color-primary)' }}
             >

@@ -4,8 +4,10 @@ import { Phone, ShoppingBag, Star } from 'lucide-react';
 import { SectionProps } from '../../types';
 import { ScrollReveal } from '../../sections/ScrollReveal';
 import { SHINE_COLORS } from '../data/defaults';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export function ShineSushiCTA({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const title =
     (content.title as string | undefined) || '¿Listo para la\nExperiencia Nikkei?';
   const ctaDeliveryText = (content.ctaDeliveryText as string | undefined) || 'Pedir Ahora';
@@ -88,7 +90,7 @@ export function ShineSushiCTA({ content, restaurant }: SectionProps) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {/* Primary: Delivery */}
             <a
-              href={`/${restaurant.slug}/menu`}
+              href={`${basePath}/menu`}
               className="group w-full sm:w-auto min-h-[56px] px-12 py-4 font-bold text-lg text-white uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
               style={{
                 backgroundColor: SHINE_COLORS.orange,

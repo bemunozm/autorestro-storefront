@@ -67,7 +67,7 @@ export default function SessionPage() {
   const router = useRouter();
   const { isDineIn, sessionId, tableId } = useDineInMode();
   const { token } = useAuthStore();
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
 
   const [session, setSession] = useState<SessionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,11 +89,11 @@ export default function SessionPage() {
 
   useEffect(() => {
     if (!isDineIn) {
-      router.push(`/${slug}`);
+      router.push(basePath || '/');
       return;
     }
     fetchSession();
-  }, [isDineIn, sessionId, router, slug, fetchSession]);
+  }, [isDineIn, sessionId, router, basePath, fetchSession]);
 
   useEffect(() => {
     if (!token || !sessionId) return;
@@ -134,12 +134,12 @@ export default function SessionPage() {
     });
 
     s.on('session:closed', () => {
-      router.push(`/${slug}/session-finished`);
+      router.push(`${basePath}/session-finished`);
     });
 
     setSocket(s);
     return () => { s.disconnect(); };
-  }, [token, sessionId, slug, router]);
+  }, [token, sessionId, basePath, router]);
 
   const handleRequestAssistance = async (type: string) => {
     try {
@@ -221,7 +221,7 @@ export default function SessionPage() {
                 </div>
                 <h3 className="text-lg font-bold text-muted-foreground mb-2">Aún no hay pedidos</h3>
                 <p className="text-sm text-muted-foreground mb-6">Explora el menú y haz el primer pedido de la mesa.</p>
-                <Button onClick={() => router.push(`/${slug}/menu`)} className="rounded-xl h-11 px-8 font-bold">
+                <Button onClick={() => router.push(`${basePath}/menu`)} className="rounded-xl h-11 px-8 font-bold">
                   Ver Menú
                 </Button>
               </Card>
@@ -327,7 +327,7 @@ export default function SessionPage() {
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t px-6 py-2 flex items-center justify-between z-40 pb-safe">
-        <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 px-0 w-20 text-muted-foreground hover:text-primary hover:bg-transparent" onClick={() => router.push(`/${slug}/menu`)}>
+        <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 px-0 w-20 text-muted-foreground hover:text-primary hover:bg-transparent" onClick={() => router.push(`${basePath}/menu`)}>
           <UtensilsCrossed size={20} />
           <span className="text-[10px] font-bold">Menú</span>
         </Button>
@@ -336,7 +336,7 @@ export default function SessionPage() {
           <span className="text-[10px]">Pedidos</span>
           <div className="w-1 h-1 rounded-full bg-primary mt-0.5" />
         </Button>
-        <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 px-0 w-20 text-muted-foreground hover:text-primary hover:bg-transparent" onClick={() => router.push(`/${slug}/checkout`)}>
+        <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 px-0 w-20 text-muted-foreground hover:text-primary hover:bg-transparent" onClick={() => router.push(`${basePath}/checkout`)}>
           <ShoppingBag size={20} />
           <span className="text-[10px] font-bold">Carrito</span>
         </Button>

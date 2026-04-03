@@ -4,8 +4,10 @@ import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import { SectionProps } from '../types';
 import { ScrollReveal } from './ScrollReveal';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export function HeroSection({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const title = content.title as string | undefined;
   const subtitle = content.subtitle as string | undefined;
   const ctaText = (content.ctaText as string) || 'Ver Menú';
@@ -60,7 +62,7 @@ export function HeroSection({ content, restaurant }: SectionProps) {
 
         <ScrollReveal direction="up" delay={800}>
           <a
-            href={`/${restaurant.slug}/menu`}
+            href={`${basePath}/menu`}
             className="inline-block px-10 py-4 bg-[var(--theme-primary,#000)] text-white font-bold text-xl rounded-[var(--theme-radius,0.5rem)] hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-[var(--theme-primary)]/40"
           >
             {ctaText}

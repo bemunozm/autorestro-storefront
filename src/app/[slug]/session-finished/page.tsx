@@ -24,7 +24,7 @@ interface SessionSummary {
 export default function SessionFinishedPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const { sessionId, clear: clearSession } = useSessionStore();
   const { token, logout } = useAuthStore();
   const { clearCart } = useCartStore();
@@ -121,7 +121,7 @@ export default function SessionFinishedPage() {
 
         <div className="space-y-3">
           <Button 
-            onClick={() => router.push(`/${slug}`)}
+            onClick={() => router.push(basePath || '/')}
             className="w-full h-14 rounded-2xl bg-primary text-lg font-bold shadow-xl shadow-primary/20 gap-2 group"
           >
             Volver al inicio

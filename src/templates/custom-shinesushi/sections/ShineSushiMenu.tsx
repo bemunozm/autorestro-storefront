@@ -5,8 +5,10 @@ import { ArrowRight, Flame } from 'lucide-react';
 import { SectionProps } from '../../types';
 import { ScrollReveal } from '../../sections/ScrollReveal';
 import { SHINE_COLORS, DEFAULT_DISHES, ShineDish } from '../data/defaults';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export function ShineSushiMenu({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const rawDishes = content.dishes as ShineDish[] | undefined;
   const dishes = rawDishes && rawDishes.length > 0 ? rawDishes : DEFAULT_DISHES;
   const title = (content.title as string | undefined) || 'Platos Destacados';
@@ -137,7 +139,7 @@ export function ShineSushiMenu({ content, restaurant }: SectionProps) {
         {/* CTA */}
         <ScrollReveal direction="up" delay={200} className="text-center">
           <a
-            href={`/${restaurant.slug}/menu`}
+            href={`${basePath}/menu`}
             className="inline-flex items-center gap-3 px-10 py-4 font-bold text-white text-base tracking-wider uppercase transition-all duration-300 hover:scale-105 active:scale-95"
             style={{
               backgroundColor: SHINE_COLORS.orange,

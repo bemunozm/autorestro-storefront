@@ -2,8 +2,10 @@
 
 import { TemplateProps } from '../types';
 import { FeaturesSection, CTASection, ContactSection, ScrollReveal } from '../sections';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
 export default function MinimalTemplate({ restaurant }: TemplateProps) {
+  const { basePath } = useRestaurant();
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-black selection:bg-[var(--theme-primary)] selection:text-white font-[var(--theme-font)]">
       {/* Compact Hero UI - Custom for Minimal */}
@@ -19,7 +21,7 @@ export default function MinimalTemplate({ restaurant }: TemplateProps) {
               </p>
               <div className="flex justify-center items-center gap-8">
                 <a
-                  href={`/${restaurant.slug}/menu`}
+                  href={`${basePath}/menu`}
                   className="px-12 py-5 bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-xl rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl"
                 >
                   Ver Menú

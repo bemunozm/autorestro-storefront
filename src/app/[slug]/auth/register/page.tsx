@@ -34,7 +34,7 @@ export default function RegisterPage() {
   const params = useParams();
   const slug = params.slug as string;
   const router = useRouter();
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const { login } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,7 +61,7 @@ export default function RegisterPage() {
 
       const { access_token, user } = loginResponse.data;
       login(access_token, user);
-      router.push(`/${slug}/menu`);
+      router.push(`${basePath}/menu`);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         setError(err.response.data.message);
@@ -144,7 +144,7 @@ export default function RegisterPage() {
             <p className="text-sm text-gray-600">
               ¿Ya tienes una cuenta?{' '}
               <Link 
-                href={`/${slug}/auth/login`} 
+                href={`${basePath}/auth/login`} 
                 className="font-medium hover:underline"
                 style={{ color: 'var(--color-primary)' }}
               >

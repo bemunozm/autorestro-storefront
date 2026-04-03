@@ -22,7 +22,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, updateQuantity, removeItem, getTotal, getItemCount } = useCartStore();
-  const { slug } = useRestaurant();
+  const { basePath } = useRestaurant();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -137,7 +137,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <span className="text-gray-600">Subtotal</span>
                 <span className="text-xl font-bold">{formatPrice(getTotal())}</span>
               </div>
-              <Link href={`/${slug}/checkout`} passHref className="w-full">
+              <Link href={`${basePath}/checkout`} passHref className="w-full">
                 <Button 
                   className="w-full h-12 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)] opacity-90 hover:opacity-100 text-lg font-bold shadow-lg"
                   onClick={onClose}

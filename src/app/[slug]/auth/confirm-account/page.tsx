@@ -16,7 +16,7 @@ export default function ConfirmAccountPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const { restaurant } = useRestaurant();
+  const { restaurant, basePath } = useRestaurant();
   const [status, setStatus] = useState<'checking' | 'confirmed' | 'error' | 'no-token'>(
     token ? 'checking' : 'no-token'
   );
@@ -27,7 +27,7 @@ export default function ConfirmAccountPage() {
     api.post('/auth/confirm-email', { token })
       .then(() => {
         setStatus('confirmed');
-        setTimeout(() => router.push(`/${slug}/auth/login`), 2000);
+        setTimeout(() => router.push(`${basePath}/auth/login`), 2000);
       })
       .catch(() => {
         setStatus('error');
@@ -76,7 +76,7 @@ export default function ConfirmAccountPage() {
                     El enlace de confirmación es inválido o ha expirado.
                   </AlertDescription>
                 </Alert>
-                <Link href={`/${slug}/auth/login`}>
+                <Link href={`${basePath}/auth/login`}>
                   <Button
                     className="w-full text-white"
                     style={{ backgroundColor: 'var(--color-primary)' }}
@@ -93,7 +93,7 @@ export default function ConfirmAccountPage() {
                 <p className="text-sm text-gray-600">
                   No se encontró un token de confirmación válido.
                 </p>
-                <Link href={`/${slug}/auth/login`}>
+                <Link href={`${basePath}/auth/login`}>
                   <Button
                     className="w-full text-white"
                     style={{ backgroundColor: 'var(--color-primary)' }}
