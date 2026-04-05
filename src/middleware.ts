@@ -22,17 +22,19 @@ export async function middleware(request: NextRequest) {
   }
 
   let slug = '';
-  const isPlatformDomain = PLATFORM_DOMAINS.some(domain => 
-    hostname.endsWith(domain)
+  // Strip port for domain matching (e.g. "localhost:3000" → "localhost")
+  const hostnameWithoutPort = hostname.split(':')[0];
+  const isPlatformDomain = PLATFORM_DOMAINS.some(domain =>
+    hostnameWithoutPort.endsWith(domain)
   );
 
   if (isPlatformDomain) {
-    const hostParts = hostname.split('.');
-    
+    const hostParts = hostnameWithoutPort.split('.');
+
     // Check if it's a subdomain (e.g. takosushi.autorestro.cl)
     // For localhost, check if there's at least one dot (e.g. takosushi.localhost)
-    const isSubdomain = hostname.includes('localhost') 
-      ? hostParts.length >= 2 
+    const isSubdomain = hostnameWithoutPort.includes('localhost')
+      ? hostParts.length >= 2
       : hostParts.length >= 3;
 
     if (isSubdomain) {
@@ -55,7 +57,7 @@ export async function middleware(request: NextRequest) {
       slug = cached.slug;
     } else {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const res = await fetch(`${apiUrl}/storefront/resolve-domain?domain=${hostname}`);
         
         if (res.ok) {

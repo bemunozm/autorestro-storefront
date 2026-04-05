@@ -17,7 +17,7 @@ export function useOrderSocket(restaurantId: string | undefined) {
   useEffect(() => {
     if (!token || !restaurantId) return;
 
-    const s = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/orders`, {
+    const s = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders`, {
       auth: { token },
       transports: ['websocket'],
     });

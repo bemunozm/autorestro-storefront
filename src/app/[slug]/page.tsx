@@ -1,13 +1,16 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { templateRegistry } from '@/templates/registry';
 
 export default function StorefrontHome() {
-  const { restaurant, isLoading } = useRestaurant();
-  
-  if (isLoading) {
+  const { restaurant, isLoading, error } = useRestaurant();
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
+
+  // Show spinner while loading OR before client hydration (React Query doesn't run during SSR)
+  if (isLoading || !hasMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <div className="animate-spin h-12 w-12 border-4 border-[var(--theme-primary,#111)] border-t-transparent rounded-full shadow-2xl" />

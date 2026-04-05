@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useDineInMode } from '@/hooks/useDineInMode';
 import { useCartStore } from '@/stores/cart-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { ShoppingBag, Menu, User, Bell, UtensilsCrossed, LogOut, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Menu, User, Bell, UtensilsCrossed, LogOut, ChevronRight, ShoppingCart } from 'lucide-react';
+import { LoyaltyBadge } from '@/components/loyalty/LoyaltyBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,6 +18,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 
 export function StorefrontHeader() {
   const pathname = usePathname();
@@ -26,20 +35,30 @@ export function StorefrontHeader() {
   const { getItemCount } = useCartStore();
   const { isAuthenticated, user, logout } = useAuthStore();
 
-  const cartCount = getItemCount();
+  // Prevent hydration mismatch: Zustand stores return defaults on server,
+  // real values on client after rehydration from localStorage
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
+
+  const cartCount = hasMounted ? getItemCount() : 0;
+
+  // Use hasMounted for auth-dependent values to match server render
+  const authed = hasMounted && isAuthenticated;
+  const dineIn = hasMounted && isDineIn;
 
   const navLinks = useMemo(() => {
-    if (isDineIn) {
+    if (dineIn) {
       return [
         { name: 'Menú', href: `${basePath}/menu`, icon: UtensilsCrossed },
         { name: 'Pedidos Mesa', href: `${basePath}/session`, icon: ShoppingBag },
       ];
     }
-    return [
-      { name: 'Menú', href: `${basePath}/menu`, icon: UtensilsCrossed },
-      { name: 'Mis Pedidos', href: `${basePath}/orders`, icon: ShoppingBag },
-    ];
-  }, [isDineIn, basePath]);
+    const links = [{ name: 'Menú', href: `${basePath}/menu`, icon: UtensilsCrossed }];
+    if (authed) {
+      links.push({ name: 'Mis Pedidos', href: `${basePath}/orders`, icon: ShoppingCart });
+    }
+    return links;
+  }, [dineIn, basePath, authed]);
 
   const handleLogout = () => {
     logout();
@@ -70,6 +89,28 @@ export function StorefrontHeader() {
                   <span className="font-bold truncate">{restaurant?.name}</span>
                 </SheetTitle>
               </SheetHeader>
+
+              {/* Mobile: user profile section */}
+              {authed && (
+                <>
+                  <div className="px-6 py-4 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary text-lg font-black shrink-0">
+                      {user?.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm truncate">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                      {!dineIn && (
+                        <div className="mt-1.5">
+                          <LoyaltyBadge />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Separator />
+                </>
+              )}
+
               <div className="flex flex-col gap-2 p-6">
                 {navLinks.map((link) => (
                   <Link
@@ -86,7 +127,7 @@ export function StorefrontHeader() {
                     <ChevronRight className={`h-4 w-4 ${pathname === link.href ? 'text-white/70' : 'text-muted-foreground'}`} />
                   </Link>
                 ))}
-                {!isDineIn && !isAuthenticated && (
+                {!dineIn && !authed && (
                   <Link
                     href={`${basePath}/auth/login`}
                     className="flex items-center gap-3 p-4 rounded-2xl hover:bg-muted font-bold mt-4"
@@ -95,7 +136,7 @@ export function StorefrontHeader() {
                     Iniciar Sesión
                   </Link>
                 )}
-                {isAuthenticated && (
+                {authed && (
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 p-4 rounded-2xl hover:bg-red-50 text-red-600 font-bold mt-auto"
@@ -134,34 +175,60 @@ export function StorefrontHeader() {
               }`}
             >
               {link.name}
-              {pathname === link.href && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full" />
-              )}
+              <div
+                className={`absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full transition-all duration-300 ${
+                  pathname === link.href ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'
+                }`}
+              />
             </Link>
           ))}
         </nav>
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {isDineIn ? (
-            <div className="hidden sm:flex items-center bg-primary/10 text-primary px-3 py-1.5 rounded-full font-bold text-xs gap-2 mr-2 border border-primary/20">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          {/* Mesa badge */}
+          {dineIn && (
+            <div className="flex items-center bg-primary/10 text-primary px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-[10px] sm:text-xs gap-1.5 mr-1 sm:mr-2 border border-primary/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               Mesa #{tableId}
             </div>
-          ) : (
-            <div className="hidden lg:block">
-              {isAuthenticated ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="rounded-full gap-2 font-bold hover:bg-muted"
-                  onClick={() => router.push(`${basePath}/orders`)}
-                >
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs">
-                    {user?.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="hidden xl:inline">{user?.name}</span>
-                </Button>
+          )}
+
+          {!dineIn && (
+            <div className="hidden lg:flex items-center gap-2">
+              <LoyaltyBadge />
+              {authed ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full gap-2 font-bold hover:bg-muted"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">
+                        {user?.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="hidden xl:inline">{user?.name}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl p-1">
+                    <DropdownMenuItem
+                      className="rounded-lg cursor-pointer font-medium gap-2"
+                      onClick={() => router.push(`${basePath}/orders`)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      Mis Pedidos
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="rounded-lg cursor-pointer font-medium gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Cerrar Sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <Button variant="ghost" size="sm" className="rounded-full font-bold" onClick={() => router.push(`${basePath}/auth/login`)}>
                   Entrar
@@ -171,7 +238,7 @@ export function StorefrontHeader() {
           )}
 
           <div className="flex items-center gap-1.5">
-            {isDineIn && (
+            {dineIn && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -181,7 +248,7 @@ export function StorefrontHeader() {
                 <Bell size={20} className="text-muted-foreground" />
               </Button>
             )}
-            
+
             <Link href={`${basePath}/checkout`}>
               <Button size="icon" className="rounded-full w-10 h-10 shadow-lg shadow-primary/20 relative group overflow-visible">
                 <ShoppingBag size={20} />

@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Clock, ChefHat, Package, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/format';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
@@ -149,7 +150,7 @@ export default function OrderTrackingPage() {
                     </Badge>
                   </div>
                   <p className="font-semibold text-gray-900">
-                    ${(item.price * item.quantity).toLocaleString('es-CL')}
+                    {formatPrice(item.price * item.quantity)}
                   </p>
                 </div>
               ))}
@@ -157,7 +158,7 @@ export default function OrderTrackingPage() {
             <div className="p-4 bg-gray-50 flex justify-between items-center">
               <span className="text-gray-600 font-medium">Total</span>
               <span className="text-xl font-bold text-gray-900">
-                ${(order.total || 0).toLocaleString('es-CL')}
+                {formatPrice(order.total || 0)}
               </span>
             </div>
           </CardContent>

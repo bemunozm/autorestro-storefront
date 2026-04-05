@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingBag, ChevronRight, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Order } from '@/types/order';
+import { formatPrice } from '@/lib/format';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-700' },
@@ -76,7 +77,7 @@ export default function OrdersPage() {
                           {order.type === 'dine_in' ? 'En el local' : order.type === 'pickup' ? 'Para retirar' : 'Delivery'}
                         </p>
                         <p className="font-bold text-gray-900">
-                          ${(order.total || 0).toLocaleString('es-CL')}
+                          {formatPrice(order.total || 0)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-500">

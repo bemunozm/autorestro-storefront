@@ -6,6 +6,7 @@ import { useCreateOrder } from '@/hooks/useCreateOrder';
 import { useDineInMode } from '@/hooks/useDineInMode';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,8 +16,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, ShoppingBag, MapPin, Phone, StickyNote, CheckCircle2, Loader2, UtensilsCrossed } from 'lucide-react';
+import { LoyaltyRedemption } from '@/components/loyalty/LoyaltyRedemption';
+import { useAuthStore } from '@/stores/auth-store';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
+import { formatPrice } from '@/lib/format';
 
 interface ApiError extends Error {
   response?: {
@@ -47,8 +51,11 @@ export default function CheckoutPage() {
   const { isDineIn, sessionId, tableId } = useDineInMode();
   const router = useRouter();
   const { mutate: createOrder, isPending } = useCreateOrder();
+  const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState({ points: 0, amount: 0 });
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -65,14 +72,6 @@ export default function CheckoutPage() {
     }
   }, [items, router, basePath, getItemCount, isSuccess]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
   const onSubmit = (values: CheckoutFormValues) => {
     const payload = {
       type: values.type,
@@ -86,10 +85,13 @@ export default function CheckoutPage() {
       customerNotes: values.customerNotes,
       sessionId: isDineIn ? sessionId : null,
       tableId: isDineIn ? tableId : null,
+      ...(loyaltyDiscount.points > 0 && { loyaltyPoints: loyaltyDiscount.points }),
     };
 
     createOrder(payload, {
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['loyalty-balance'] });
+        queryClient.invalidateQueries({ queryKey: ['loyalty-transactions'] });
         setIsSuccess(true);
         confetti({
           particleCount: 150,
@@ -127,7 +129,7 @@ export default function CheckoutPage() {
         <div className="flex flex-col w-full max-w-md gap-3">
           <Button 
             onClick={() => router.push(`${basePath}/menu`)}
-            className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-lg font-bold shadow-lg"
+            className="w-full h-14 rounded-2xl bg-(--color-primary) hover:bg-(--color-primary) text-lg font-bold shadow-lg"
           >
             {isDineIn ? 'Pedir algo más' : 'Volver al menú'}
           </Button>
@@ -182,7 +184,7 @@ export default function CheckoutPage() {
           {/* Order Summary Section */}
           <section className="bg-white rounded-2xl shadow-sm border p-6">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <ShoppingBag size={20} className="text-[var(--color-primary)]" />
+              <ShoppingBag size={20} className="text-(--color-primary)" />
               Resumen del Pedido
             </h2>
             <div className="space-y-4">
@@ -209,9 +211,17 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               ))}
+              {loyaltyDiscount.amount > 0 && (
+                <div className="flex justify-between items-center text-sm text-green-600 font-medium">
+                  <span>Descuento puntos</span>
+                  <span>-{formatPrice(loyaltyDiscount.amount)}</span>
+                </div>
+              )}
               <div className="pt-4 border-t flex justify-between items-center">
                 <span className="font-medium text-gray-600">Total a pagar</span>
-                <span className="text-2xl font-bold text-[var(--color-primary)]">{formatPrice(getTotal())}</span>
+                <span className="text-2xl font-bold text-(--color-primary)">
+                  {formatPrice(Math.max(0, getTotal() - loyaltyDiscount.amount))}
+                </span>
               </div>
             </div>
           </section>
@@ -226,7 +236,7 @@ export default function CheckoutPage() {
                 className="grid grid-cols-2 gap-4"
               >
                 {restaurant?.features?.pickup && (
-                  <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'pickup' ? 'border-[var(--color-primary)] bg-primary/5' : 'border-gray-100'}`}>
+                  <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'pickup' ? 'border-(--color-primary) bg-primary/5' : 'border-gray-100'}`}>
                     <Label htmlFor="pickup" className="flex flex-col cursor-pointer">
                       <span className="font-bold">Retiro en local</span>
                       <span className="text-xs text-gray-500">Sin costo</span>
@@ -235,7 +245,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {restaurant?.features?.delivery && (
-                  <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'delivery' ? 'border-[var(--color-primary)] bg-primary/5' : 'border-gray-100'}`}>
+                  <div className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${orderType === 'delivery' ? 'border-(--color-primary) bg-primary/5' : 'border-gray-100'}`}>
                     <Label htmlFor="delivery" className="flex flex-col cursor-pointer">
                       <span className="font-bold">Delivery</span>
                       <span className="text-xs text-gray-500">A tu puerta</span>
@@ -297,11 +307,20 @@ export default function CheckoutPage() {
             </div>
           </section>
 
+          {/* Loyalty Redemption — solo para usuarios autenticados en modo no dine-in */}
+          {isAuthenticated && !isDineIn && (
+            <LoyaltyRedemption
+              appliedPoints={loyaltyDiscount.points}
+              onRedeem={(points, amount) => setLoyaltyDiscount({ points, amount })}
+              onClear={() => setLoyaltyDiscount({ points: 0, amount: 0 })}
+            />
+          )}
+
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t lg:relative lg:bg-transparent lg:border-none lg:p-0">
             <Button 
               type="submit"
               disabled={isPending}
-              className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+              className="w-full h-14 rounded-2xl bg-(--color-primary) hover:bg-(--color-primary) text-xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
             >
               {isPending ? (
                 <>

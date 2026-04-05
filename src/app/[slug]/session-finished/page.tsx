@@ -7,14 +7,17 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useCartStore } from '@/stores/cart-store';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import api from '@/lib/api';
-import { 
-  CheckCircle2, 
-  Home, 
-  PartyPopper
+import {
+  CheckCircle2,
+  Home,
+  PartyPopper,
+  Star
 } from 'lucide-react';
+import { useLoyaltyProgram } from '@/hooks/useLoyalty';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import confetti from 'canvas-confetti';
+import { formatPrice } from '@/lib/format';
 
 interface SessionSummary {
   totalItems: number;
@@ -30,6 +33,7 @@ export default function SessionFinishedPage() {
   const { clearCart } = useCartStore();
 
   const [summary, setSummary] = useState<SessionSummary | null>(null);
+  const { data: loyaltyProgram } = useLoyaltyProgram();
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -75,19 +79,8 @@ export default function SessionFinishedPage() {
       clearSession();
       logout();
       clearCart();
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-      }
     };
   }, [clearCart, clearSession, fetchSummary, logout, sessionId, token]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
@@ -119,8 +112,24 @@ export default function SessionFinishedPage() {
           </CardContent>
         </Card>
 
+        {loyaltyProgram?.isActive && summary && summary.totalSpent > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+              <Star size={20} className="fill-white text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-amber-800 font-black text-sm">
+                ¡Ganaste {Math.floor(summary.totalSpent * loyaltyProgram.pointsPerCurrencyUnit)} puntos!
+              </p>
+              <p className="text-amber-600 text-xs font-medium">
+                Se acreditarán en tu cuenta al completarse el pago.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-3">
-          <Button 
+          <Button
             onClick={() => router.push(basePath || '/')}
             className="w-full h-14 rounded-2xl bg-primary text-lg font-bold shadow-xl shadow-primary/20 gap-2 group"
           >

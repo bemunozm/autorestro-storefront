@@ -98,7 +98,7 @@ export default function SessionPage() {
   useEffect(() => {
     if (!token || !sessionId) return;
 
-    const s = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/orders`, {
+    const s = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders`, {
       auth: { token },
       transports: ['websocket'],
     });

@@ -77,9 +77,6 @@ export default function TableJoinPage() {
       login(guestToken, null);
       setSession(joinedSessionId);
       setTable(joinedTableId);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', guestToken);
-      }
 
       router.push(`${basePath}/menu`);
     } catch (error) {
@@ -100,9 +97,6 @@ export default function TableJoinPage() {
       login(guestToken, null);
       setSession(sessionId);
       setTable(joinedTableId);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', guestToken);
-      }
 
       router.push(`${basePath}/menu`);
     } catch (error) {

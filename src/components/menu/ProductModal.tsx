@@ -1,49 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Product } from '@/types/menu';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart-store';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import { Minus, Plus, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Check, UtensilsCrossed } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { formatPrice } from '@/lib/format';
 
 interface ProductModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
+  onAdded?: () => void;
 }
 
-export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
+export function ProductModal({ product, isOpen, onClose, onAdded }: ProductModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [comment, setComment] = useState('');
+  const [addedSuccess, setAddedSuccess] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
+
+  // Reset state whenever the modal opens or the product changes
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+      setComment('');
+      setAddedSuccess(false);
+    }
+  }, [isOpen, product?.id]);
 
   const handleAddToCart = () => {
     addItem(product, quantity, comment);
-    onClose();
-    setQuantity(1);
-    setComment('');
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0,
-    }).format(price);
+    onAdded?.();
+    setAddedSuccess(true);
+    setTimeout(() => {
+      setAddedSuccess(false);
+      onClose();
+    }, 1000);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] overflow-hidden p-0 rounded-2xl">
+      <DialogContent className="sm:max-w-106.25 overflow-hidden p-0 rounded-2xl">
         <div className="relative aspect-video w-full">
           {product.imageUrl ? (
             <Image
@@ -53,8 +60,8 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
-              No image
+            <div className="h-full w-full bg-(--color-primary)/10 flex items-center justify-center">
+              <UtensilsCrossed className="text-primary/40" size={40} />
             </div>
           )}
         </div>
@@ -65,7 +72,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
           {product.description && (
             <p className="text-gray-600 mb-6 text-sm">{product.description}</p>
           )}
-          
+
           <div className="mb-6">
             <h4 className="text-sm font-semibold mb-2 text-gray-700">Comentarios (opcional)</h4>
             <Textarea
@@ -85,7 +92,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               >
                 <Minus size={18} />
               </button>
-              <span className="font-semibold min-w-[20px] text-center">{quantity}</span>
+              <span className="font-semibold min-w-5 text-center">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
                 className="p-1 hover:bg-gray-200 rounded-full transition-colors"
@@ -96,12 +103,26 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
           </div>
         </div>
         <DialogFooter className="p-6 bg-white border-t sm:justify-center">
-          <Button 
-            className="w-full rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)] opacity-90 hover:opacity-100 h-12 flex items-center gap-2 text-base font-bold transition-all"
+          <Button
+            className={`w-full rounded-full h-12 flex items-center gap-2 text-base font-bold transition-all duration-300 ${
+              addedSuccess
+                ? 'bg-green-500 hover:bg-green-500 text-white'
+                : 'bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100'
+            }`}
             onClick={handleAddToCart}
+            disabled={addedSuccess}
           >
-            <ShoppingCart size={20} />
-            Agregar al carrito
+            {addedSuccess ? (
+              <>
+                <Check size={20} />
+                Agregado!
+              </>
+            ) : (
+              <>
+                <ShoppingCart size={20} />
+                Agregar al carrito · {formatPrice(product.price * quantity)}
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
