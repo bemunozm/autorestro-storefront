@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const registerSchema = z.object({
@@ -31,13 +32,13 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const params = useParams();
-  const slug = params.slug as string;
   const router = useRouter();
   const { restaurant, basePath } = useRestaurant();
   const { login } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -53,7 +54,6 @@ export default function RegisterPage() {
         restaurantId: restaurant.id,
       });
 
-      // On success, auto-login
       const loginResponse = await api.post('/auth/login', {
         email: data.email,
         password: data.password,
@@ -74,20 +74,26 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+    <div
+      className="min-h-screen flex flex-col justify-center items-center p-4"
+      style={{ background: 'color-mix(in srgb, var(--color-primary) 8%, white)' }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           {restaurant?.logoUrl && (
-            <img 
-              src={restaurant.logoUrl} 
-              alt={restaurant.name} 
-              className="mx-auto h-20 w-auto mb-4"
-            />
+            <div className="relative mx-auto h-20 w-20 mb-4">
+              <Image
+                src={restaurant.logoUrl}
+                alt={restaurant.name}
+                fill
+                className="object-contain"
+              />
+            </div>
           )}
           <h1 className="text-2xl font-bold text-gray-900">Únete a {restaurant?.name}</h1>
         </div>
 
-        <Card className="shadow-sm border-none rounded-xl">
+        <Card className="shadow-sm border-none rounded-2xl">
           <CardHeader>
             <CardTitle className="text-xl">Crear Cuenta</CardTitle>
           </CardHeader>
@@ -112,12 +118,42 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" {...register('password')} />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    {...register('password')}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password_confirmation">Confirmar Contraseña</Label>
-                <Input id="password_confirmation" type="password" {...register('password_confirmation')} />
+                <div className="relative">
+                  <Input
+                    id="password_confirmation"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    {...register('password_confirmation')}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password_confirmation && (
                   <p className="text-sm text-red-500">{errors.password_confirmation.message}</p>
                 )}
@@ -130,21 +166,25 @@ export default function RegisterPage() {
                 </Alert>
               )}
 
-              <Button 
-                type="submit" 
-                className="w-full text-white" 
+              <Button
+                type="submit"
+                className="w-full text-white"
                 style={{ backgroundColor: 'var(--color-primary)' }}
                 disabled={loading}
               >
-                {loading ? 'Registrando...' : 'Registrarse'}
+                {loading ? (
+                  <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Registrando...</>
+                ) : (
+                  'Registrarse'
+                )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center border-t py-4">
             <p className="text-sm text-gray-600">
               ¿Ya tienes una cuenta?{' '}
-              <Link 
-                href={`${basePath}/auth/login`} 
+              <Link
+                href={`${basePath}/auth/login`}
                 className="font-medium hover:underline"
                 style={{ color: 'var(--color-primary)' }}
               >

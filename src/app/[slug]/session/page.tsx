@@ -7,13 +7,14 @@ import { useRestaurant } from '@/providers/restaurant-provider';
 import { useDineInMode } from '@/hooks/useDineInMode';
 import api from '@/lib/api';
 import { io, Socket } from 'socket.io-client';
-import { 
-  Loader2, 
-  Users, 
-  ShoppingBag, 
-  Bell, 
-  UtensilsCrossed, 
-  ChevronRight, 
+import {
+  Loader2,
+  Users,
+  ShoppingBag,
+  ShoppingCart,
+  Bell,
+  UtensilsCrossed,
+  ChevronRight,
   Clock,
   CheckCircle2,
   ChefHat,
@@ -190,7 +191,7 @@ export default function SessionPage() {
             <h1 className="font-bold text-lg">Mesa #{tableId}</h1>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              Sessión Activa
+              Sesión Activa
             </div>
           </div>
         </div>
@@ -214,6 +215,18 @@ export default function SessionPage() {
           </TabsList>
 
           <TabsContent value="pedidos" className="space-y-4">
+            {session && session.orders.length > 0 && (() => {
+              const tableTotal = session.orders.reduce((acc, order) =>
+                acc + order.items.reduce((s, item) => s + item.price * item.quantity, 0), 0);
+              return (
+                <div className="sticky top-[73px] z-10 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-3 flex justify-between items-center">
+                  <span className="text-sm font-semibold text-primary">Total mesa</span>
+                  <span className="font-bold text-primary">
+                    {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(tableTotal)}
+                  </span>
+                </div>
+              );
+            })()}
             {session?.orders.length === 0 ? (
               <Card className="border-none bg-white/50 rounded-3xl p-8 text-center border-2 border-dashed border-muted">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -262,20 +275,35 @@ export default function SessionPage() {
           </TabsContent>
 
           <TabsContent value="personas" className="space-y-3">
-            {session?.guests.map((guest) => (
-              <div key={guest.id} className="bg-white rounded-2xl p-4 flex items-center justify-between border-none shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                    {guest.name.charAt(0).toUpperCase()}
+            {session?.guests.map((guest) => {
+              const guestOrders = session.orders.filter(o => o.guestId === guest.id);
+              const itemCount = guestOrders.reduce((acc, o) => acc + o.items.length, 0);
+              const subtotal = guestOrders.reduce((acc, o) =>
+                acc + o.items.reduce((s, item) => s + item.price * item.quantity, 0), 0);
+              return (
+                <div key={guest.id} className="bg-white rounded-2xl p-4 flex items-center justify-between border-none shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      {guest.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">{guest.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {itemCount > 0 ? `${itemCount} ${itemCount === 1 ? 'ítem' : 'ítems'}` : 'Sin pedidos aún'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm">{guest.name}</p>
-                    <p className="text-[10px] text-muted-foreground">En la mesa</p>
+                  <div className="flex items-center gap-2">
+                    {subtotal > 0 && (
+                      <span className="text-xs font-bold text-primary">
+                        {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(subtotal)}
+                      </span>
+                    )}
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
                   </div>
                 </div>
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-              </div>
-            ))}
+              );
+            })}
           </TabsContent>
         </Tabs>
       </main>
@@ -284,8 +312,8 @@ export default function SessionPage() {
       <div className="fixed bottom-24 right-4 z-40">
         <Dialog open={assistanceModalOpen} onOpenChange={setAssistanceModalOpen}>
           <DialogTrigger asChild>
-            <Button size="icon" className="w-14 h-14 rounded-full shadow-2xl animate-pulse ring-4 ring-primary/20">
-              <Bell size={24} className="animate-bounce" />
+            <Button size="icon" className="w-14 h-14 rounded-full shadow-2xl ring-4 ring-primary/20 hover:opacity-90 active:scale-95 transition-all">
+              <Bell size={24} />
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-3xl max-w-[90vw]">
@@ -337,7 +365,7 @@ export default function SessionPage() {
           <div className="w-1 h-1 rounded-full bg-primary mt-0.5" />
         </Button>
         <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 px-0 w-20 text-muted-foreground hover:text-primary hover:bg-transparent" onClick={() => router.push(`${basePath}/checkout`)}>
-          <ShoppingBag size={20} />
+          <ShoppingCart size={20} />
           <span className="text-[10px] font-bold">Carrito</span>
         </Button>
       </nav>

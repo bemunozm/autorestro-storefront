@@ -1,6 +1,7 @@
 'use client';
 
 import { Category } from '@/types/menu';
+// CategoryTabs receives full Category objects (with products) to compute counts on desktop
 import { cn } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 
@@ -39,6 +40,7 @@ export function CategoryTabs({ categories, activeCategory, onCategoryChange }: C
             )}
           >
             {category.name}
+            <span className="hidden lg:inline ml-1.5 text-xs opacity-60">({category.products.length})</span>
           </button>
         ))}
       </div>

@@ -5,125 +5,228 @@ import { SectionProps } from '../../types';
 import { ScrollReveal } from '../../sections/ScrollReveal';
 import { SHINE_COLORS } from '../data/defaults';
 
-interface StatItem {
-  value: string;
-  label: string;
-}
-
-const DEFAULT_STATS: StatItem[] = [
-  { value: '4.0★', label: 'TripAdvisor' },
-  { value: '3', label: 'Sucursales' },
-  { value: '100%', label: 'Fusión Única' },
-];
-
-const DEFAULT_IMAGE =
-  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=900';
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=900';
 
 export function ShineSushiAbout({ content }: SectionProps) {
-  const title = (content.title as string | undefined) || 'Fusión Nikkei Premium';
+  const title = (content.title as string | undefined) || 'Donde el Pacífico\nSe Encuentra';
   const description =
     (content.description as string | undefined) ||
-    'Shine Sushi nació de la pasión por unir dos grandes culturas culinarias: la precisión japonesa y la intensidad peruana. Cada plato es una historia de sabores que viajan desde el Pacífico, preparados con ingredientes seleccionados y técnicas que han conquistado a Iquique y sus alrededores.';
+    'Shine Sushi nació de la pasión por unir dos grandes culturas culinarias: la precisión japonesa y la intensidad peruana. Cada plato es una historia de sabores preparados con ingredientes seleccionados y técnicas que han conquistado a Iquique.';
   const imageUrl = (content.imageUrl as string | undefined) || DEFAULT_IMAGE;
-  const rawStats = content.stats as StatItem[] | undefined;
-  const stats = rawStats && rawStats.length > 0 ? rawStats : DEFAULT_STATS;
 
   return (
     <section
-      className="py-24 px-6 overflow-hidden"
-      style={{ backgroundColor: SHINE_COLORS.surface }}
+      id="about"
+      style={{
+        backgroundColor: SHINE_COLORS.surface,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
     >
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-        {/* Image */}
+      {/* Subtle background line pattern */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 80px,
+            rgba(232,117,26,0.015) 80px,
+            rgba(232,117,26,0.015) 81px
+          )`,
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div
+        style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          minHeight: '560px',
+        }}
+        className="lg:grid-cols-2"
+      >
+        {/* Image panel — bleeds to edge */}
         <ScrollReveal direction="left">
           <div
-            className="relative h-[420px] md:h-[520px] rounded-sm overflow-hidden"
             style={{
-              boxShadow: `0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px ${SHINE_COLORS.gold}20`,
+              position: 'relative',
+              minHeight: '400px',
+              height: '100%',
             }}
           >
             <Image
               src={imageUrl}
-              alt="Shine Sushi — Fusión Nikkei"
+              alt="Shine Sushi — Experiencia"
               fill
               loading="lazy"
               className="object-cover"
+              style={{ objectPosition: 'center 40%' }}
             />
-            {/* Overlay gradient bottom */}
             <div
-              className="absolute inset-0"
               style={{
-                background: `linear-gradient(to top, ${SHINE_COLORS.primary}80 0%, transparent 60%)`,
+                position: 'absolute',
+                inset: 0,
+                background: `linear-gradient(to right, transparent 60%, ${SHINE_COLORS.surface} 100%)`,
               }}
-            />
-            {/* Gold accent corner */}
-            <div
-              className="absolute top-0 left-0 w-24 h-1"
-              style={{ background: SHINE_COLORS.gold }}
+              className="hidden lg:block"
             />
             <div
-              className="absolute top-0 left-0 w-1 h-24"
-              style={{ background: SHINE_COLORS.gold }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: `linear-gradient(to top, ${SHINE_COLORS.surface} 0%, transparent 40%)`,
+              }}
+              className="lg:hidden"
             />
+
+            {/* Floating stat card */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '40px',
+                right: '40px',
+                background: 'rgba(12,8,4,0.85)',
+                backdropFilter: 'blur(20px)',
+                border: `1px solid ${SHINE_COLORS.border}`,
+                padding: '20px 24px',
+                borderRadius: '4px',
+              }}
+              className="hidden lg:block"
+            >
+              <div
+                style={{
+                  color: SHINE_COLORS.orange,
+                  fontSize: '2rem',
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  letterSpacing: '-0.03em',
+                }}
+              >
+                4.5★
+              </div>
+              <div
+                style={{
+                  color: SHINE_COLORS.dim,
+                  fontSize: '0.65rem',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  marginTop: '4px',
+                }}
+              >
+                Google Reviews
+              </div>
+            </div>
           </div>
         </ScrollReveal>
 
-        {/* Text */}
+        {/* Text panel */}
         <ScrollReveal direction="right">
-          <div>
-            {/* Eyebrow */}
+          <div
+            style={{
+              padding: 'clamp(48px, 8vw, 96px) clamp(32px, 6vw, 80px)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
             <p
-              className="text-xs font-bold tracking-[0.35em] uppercase mb-4"
-              style={{ color: SHINE_COLORS.gold }}
+              style={{
+                color: SHINE_COLORS.orange,
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                letterSpacing: '0.4em',
+                textTransform: 'uppercase',
+                marginBottom: '20px',
+              }}
             >
               Nuestra Historia
             </p>
 
-            {/* Title */}
             <h2
-              className="font-black text-white mb-6 leading-tight"
-              style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}
+              style={{
+                color: SHINE_COLORS.cream,
+                fontSize: 'clamp(2rem, 4vw, 3.2rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.03em',
+                lineHeight: 1.1,
+                margin: '0 0 24px',
+                whiteSpace: 'pre-line',
+              }}
             >
               {title}
             </h2>
 
-            {/* Gold rule */}
             <div
-              className="h-px w-16 mb-8"
-              style={{ background: SHINE_COLORS.gold }}
+              style={{
+                width: '40px',
+                height: '2px',
+                background: SHINE_COLORS.gold,
+                marginBottom: '28px',
+              }}
             />
 
-            {/* Description */}
             <p
-              className="text-lg leading-relaxed mb-10"
-              style={{ color: `${SHINE_COLORS.cream}CC` }}
+              style={{
+                color: SHINE_COLORS.muted,
+                fontSize: '1rem',
+                lineHeight: 1.8,
+                marginBottom: '44px',
+                maxWidth: '460px',
+              }}
             >
               {description}
             </p>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              {stats.map((stat: StatItem, i: number) => (
+            {/* Stats row */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '1px',
+                background: SHINE_COLORS.border,
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}
+            >
+              {[
+                { value: '4.5★', label: 'Google' },
+                { value: '4', label: 'Locales' },
+                { value: '10+', label: 'Años' },
+              ].map((s, i) => (
                 <div
                   key={i}
-                  className="text-center py-4 px-2 rounded-sm"
                   style={{
-                    background: `${SHINE_COLORS.gold}0C`,
-                    border: `1px solid ${SHINE_COLORS.gold}25`,
+                    background: SHINE_COLORS.card,
+                    padding: '20px 16px',
+                    textAlign: 'center',
                   }}
                 >
-                  <p
-                    className="text-2xl font-black mb-1"
-                    style={{ color: SHINE_COLORS.gold }}
+                  <div
+                    style={{
+                      color: SHINE_COLORS.orange,
+                      fontSize: '1.4rem',
+                      fontWeight: 900,
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1,
+                    }}
                   >
-                    {stat.value}
-                  </p>
-                  <p
-                    className="text-xs font-medium tracking-wider uppercase"
-                    style={{ color: `${SHINE_COLORS.cream}80` }}
+                    {s.value}
+                  </div>
+                  <div
+                    style={{
+                      color: SHINE_COLORS.dim,
+                      fontSize: '0.65rem',
+                      letterSpacing: '0.2em',
+                      textTransform: 'uppercase',
+                      marginTop: '6px',
+                    }}
                   >
-                    {stat.label}
-                  </p>
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </div>

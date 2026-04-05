@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const forgotPasswordSchema = z.object({
@@ -22,8 +22,6 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  const params = useParams();
-  const slug = params.slug as string;
   const { restaurant, basePath } = useRestaurant();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -50,20 +48,26 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+    <div
+      className="min-h-screen flex flex-col justify-center items-center p-4"
+      style={{ background: 'color-mix(in srgb, var(--color-primary) 8%, white)' }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           {restaurant?.logoUrl && (
-            <img
-              src={restaurant.logoUrl}
-              alt={restaurant.name}
-              className="mx-auto h-20 w-auto mb-4"
-            />
+            <div className="relative mx-auto h-20 w-20 mb-4">
+              <Image
+                src={restaurant.logoUrl}
+                alt={restaurant.name}
+                fill
+                className="object-contain"
+              />
+            </div>
           )}
           <h1 className="text-2xl font-bold text-gray-900">{restaurant?.name}</h1>
         </div>
 
-        <Card className="shadow-sm border-none rounded-xl">
+        <Card className="shadow-sm border-none rounded-2xl">
           <CardHeader>
             <CardTitle className="text-xl">Recuperar contraseña</CardTitle>
           </CardHeader>
@@ -106,7 +110,11 @@ export default function ForgotPasswordPage() {
                   style={{ backgroundColor: 'var(--color-primary)' }}
                   disabled={loading}
                 >
-                  {loading ? 'Enviando...' : 'Enviar enlace'}
+                  {loading ? (
+                    <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Enviando...</>
+                  ) : (
+                    'Enviar enlace'
+                  )}
                 </Button>
               </form>
             )}
