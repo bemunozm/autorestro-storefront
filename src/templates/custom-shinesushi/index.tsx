@@ -32,25 +32,25 @@ export default function ShineSushiTemplate({ restaurant, sections = [] }: Templa
       : DEFAULT_SECTIONS;
 
   const renderSection = (section: SectionConfig) => {
-    const props = { key: section.order, content: section.content, restaurant };
+    const props = { content: section.content, restaurant };
 
     switch (section.type) {
       case 'hero':
-        return <ShineSushiHero {...props} />;
+        return <ShineSushiHero key={section.order} {...props} />;
       case 'about':
-        return <ShineSushiAbout {...props} />;
+        return <ShineSushiAbout key={section.order} {...props} />;
       case 'menu':
-        return <ShineSushiMenu {...props} />;
+        return <ShineSushiMenu key={section.order} {...props} />;
       case 'experience':
-        return <ShineSushiExperience {...props} />;
+        return <ShineSushiExperience key={section.order} {...props} />;
       case 'locations':
-        return <ShineSushiLocations {...props} />;
+        return <ShineSushiLocations key={section.order} {...props} />;
       case 'testimonials':
-        return <ShineSushiTestimonials {...props} />;
+        return <ShineSushiTestimonials key={section.order} {...props} />;
       case 'cta':
-        return <ShineSushiCTA {...props} />;
+        return <ShineSushiCTA key={section.order} {...props} />;
       case 'footer':
-        return <ShineSushiFooter {...props} />;
+        return <ShineSushiFooter key={section.order} {...props} />;
       default:
         return null;
     }
@@ -61,7 +61,6 @@ export default function ShineSushiTemplate({ restaurant, sections = [] }: Templa
       className="flex flex-col min-h-screen"
       style={{
         backgroundColor: SHINE_COLORS.primary,
-        // Custom selection colors for the brand
         '--selection-bg': SHINE_COLORS.gold,
         '--selection-color': SHINE_COLORS.primary,
       } as React.CSSProperties}

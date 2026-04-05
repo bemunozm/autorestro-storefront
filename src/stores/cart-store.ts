@@ -14,6 +14,8 @@ interface CartState {
   addItem: (product: Product, quantity: number, comment?: string) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  updateComment: (productId: string, comment: string) => void;
+  updateItem: (productId: string, updates: { quantity?: number; comment?: string }) => void;
   clearCart: () => void;
   setRestaurantSlug: (slug: string) => void;
   getTotal: () => number;
@@ -30,7 +32,7 @@ export const useCartStore = create<CartState>()(
         // If adding from different restaurant, clear cart
         const existing = items.find(i => i.product.id === product.id);
         if (existing) {
-          set({ items: items.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + quantity, comment: comment || i.comment } : i) });
+          set({ items: items.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + quantity, comment: comment !== undefined ? comment : i.comment } : i) });
         } else {
           set({ items: [...items, { product, quantity, comment }] });
         }
@@ -39,6 +41,24 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (productId, quantity) => {
         if (quantity <= 0) { get().removeItem(productId); return; }
         set({ items: get().items.map(i => i.product.id === productId ? { ...i, quantity } : i) });
+      },
+      updateComment: (productId, comment) => {
+        set({ items: get().items.map(i => i.product.id === productId ? { ...i, comment } : i) });
+      },
+      updateItem: (productId, updates) => {
+        const { quantity, comment } = updates;
+        if (quantity !== undefined && quantity <= 0) { get().removeItem(productId); return; }
+        set({
+          items: get().items.map(i =>
+            i.product.id === productId
+              ? {
+                  ...i,
+                  ...(quantity !== undefined ? { quantity } : {}),
+                  ...(comment !== undefined ? { comment } : {}),
+                }
+              : i
+          ),
+        });
       },
       clearCart: () => set({ items: [] }),
       setRestaurantSlug: (slug) => {
