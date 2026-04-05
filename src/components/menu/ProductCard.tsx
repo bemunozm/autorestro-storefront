@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { UtensilsCrossed } from 'lucide-react';
 import { Product } from '@/types/menu';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -36,8 +37,8 @@ export function ProductCard({ product }: ProductCardProps) {
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
-              No image
+            <div className="w-full h-full bg-gray-50 flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 8%, white)' }}>
+              <UtensilsCrossed className="h-10 w-10" style={{ color: 'color-mix(in srgb, var(--color-primary) 40%, #9ca3af)' }} />
             </div>
           )}
         </div>

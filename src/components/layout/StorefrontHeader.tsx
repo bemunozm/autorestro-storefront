@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useDineInMode } from '@/hooks/useDineInMode';
@@ -60,9 +61,9 @@ export function StorefrontHeader() {
             <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0 rounded-r-3xl border-none">
               <SheetHeader className="p-6 text-left bg-primary/5">
                 <SheetTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden">
+                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden relative">
                     {restaurant?.logoUrl ? (
-                      <img src={restaurant.logoUrl} alt="" className="w-full h-full object-cover" />
+                      <Image src={restaurant.logoUrl} alt={restaurant.name ?? ''} fill className="object-cover" />
                     ) : (
                       <UtensilsCrossed size={20} />
                     )}
@@ -111,14 +112,14 @@ export function StorefrontHeader() {
 
         {/* Logo & Name */}
         <Link href={basePath || '/'} className="flex items-center gap-2.5 flex-1 lg:flex-none truncate">
-          <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary overflow-hidden shrink-0">
+          <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary overflow-hidden shrink-0 relative">
             {restaurant?.logoUrl ? (
-              <img src={restaurant.logoUrl} alt="" className="w-full h-full object-cover" />
+              <Image src={restaurant.logoUrl} alt={restaurant.name ?? ''} fill className="object-cover" />
             ) : (
               <UtensilsCrossed size={18} />
             )}
           </div>
-          <span className="font-black text-sm lg:text-lg tracking-tight truncate hidden sm:block">
+          <span className="font-black text-sm lg:text-lg tracking-tight truncate max-w-[120px] sm:max-w-none block">
             {restaurant?.name}
           </span>
         </Link>
@@ -186,7 +187,7 @@ export function StorefrontHeader() {
               <Button size="icon" className="rounded-full w-10 h-10 shadow-lg shadow-primary/20 relative group overflow-visible">
                 <ShoppingBag size={20} />
                 {cartCount > 0 && (
-                  <Badge className="absolute -top-1.5 -right-1.5 bg-black text-white h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-white group-hover:scale-110 transition-transform">
+                  <Badge className="absolute -top-1.5 -right-1.5 text-white h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-white group-hover:scale-110 transition-transform" style={{ backgroundColor: 'var(--color-primary)' }}>
                     {cartCount}
                   </Badge>
                 )}

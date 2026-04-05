@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Phone, Clock, Navigation, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Clock, Navigation, ChevronRight } from 'lucide-react';
 import { SectionProps } from '../../types';
 import { ScrollReveal } from '../../sections/ScrollReveal';
 import { SHINE_COLORS, DEFAULT_LOCATIONS, ShineLocation } from '../data/defaults';
@@ -17,188 +17,329 @@ export function ShineSushiLocations({ content }: SectionProps) {
 
   return (
     <section
-      className="py-24 px-6 overflow-hidden"
-      style={{ backgroundColor: SHINE_COLORS.primary }}
+      id="locations"
+      style={{
+        backgroundColor: SHINE_COLORS.surface,
+        padding: 'clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px)',
+        overflow: 'hidden',
+      }}
     >
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <ScrollReveal direction="up" className="text-center mb-14">
-          <p
-            className="text-xs font-bold tracking-[0.35em] uppercase mb-4"
-            style={{ color: SHINE_COLORS.gold }}
-          >
-            Encuéntranos
-          </p>
-          <h2
-            className="font-black text-white mb-5 leading-tight"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
-          >
-            {title}
-          </h2>
-          <div
-            className="h-px w-20 mx-auto"
-            style={{
-              background: `linear-gradient(to right, transparent, ${SHINE_COLORS.gold}, transparent)`,
-            }}
-          />
-        </ScrollReveal>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
 
-        {/* Tabs */}
-        <ScrollReveal direction="up" delay={100}>
-          <div className="flex flex-wrap gap-3 justify-center mb-12">
-            {locations.map((loc: ShineLocation, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => setActiveIdx(idx)}
-                className="px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-300"
-                style={
-                  activeIdx === idx
-                    ? {
-                        backgroundColor: 'transparent',
-                        color: SHINE_COLORS.gold,
-                        border: `2px solid ${SHINE_COLORS.gold}`,
-                        boxShadow: `0 0 20px ${SHINE_COLORS.gold}20`,
-                      }
-                    : {
-                        backgroundColor: 'transparent',
-                        color: `${SHINE_COLORS.cream}60`,
-                        border: `2px solid ${SHINE_COLORS.cream}15`,
-                      }
-                }
-              >
-                <MapPin className="w-3.5 h-3.5 inline-block mr-1.5 -mt-0.5" />
-                {loc.name}
-              </button>
-            ))}
+        {/* Header */}
+        <ScrollReveal direction="up">
+          <div style={{ marginBottom: '64px' }}>
+            <p
+              style={{
+                color: SHINE_COLORS.orange,
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                letterSpacing: '0.4em',
+                textTransform: 'uppercase',
+                marginBottom: '12px',
+              }}
+            >
+              Encuéntranos
+            </p>
+            <h2
+              style={{
+                color: SHINE_COLORS.cream,
+                fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+                margin: 0,
+              }}
+            >
+              {title}
+            </h2>
           </div>
         </ScrollReveal>
 
-        {/* Location card */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Details */}
-          <ScrollReveal direction="left" key={`info-${activeIdx}`}>
+        {/* Main layout: location list + detail panel */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: '2px',
+          }}
+          className="locations-grid"
+        >
+          {/* Location selector list */}
+          <ScrollReveal direction="left">
             <div
-              className="h-full p-8 rounded-sm"
               style={{
-                background: SHINE_COLORS.surface,
-                border: `1px solid ${SHINE_COLORS.gold}20`,
-                boxShadow: `0 8px 40px rgba(0,0,0,0.4)`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
               }}
             >
-              {/* Location header */}
-              <div className="flex items-center gap-3 mb-8">
-                <div
-                  className="w-10 h-10 flex items-center justify-center"
-                  style={{ backgroundColor: SHINE_COLORS.gold, color: SHINE_COLORS.primary }}
+              {locations.map((loc: ShineLocation, idx: number) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveIdx(idx)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '20px 24px',
+                    background: activeIdx === idx ? SHINE_COLORS.card : SHINE_COLORS.bg,
+                    border: 'none',
+                    borderLeft: `3px solid ${activeIdx === idx ? SHINE_COLORS.orange : 'transparent'}`,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.25s',
+                    width: '100%',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeIdx !== idx) {
+                      (e.currentTarget as HTMLElement).style.background = SHINE_COLORS.card;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeIdx !== idx) {
+                      (e.currentTarget as HTMLElement).style.background = SHINE_COLORS.bg;
+                    }
+                  }}
                 >
-                  <MapPin className="w-5 h-5" />
-                </div>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: activeIdx === idx ? SHINE_COLORS.orange : SHINE_COLORS.orangeDim,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: activeIdx === idx ? '#fff' : SHINE_COLORS.orange,
+                      flexShrink: 0,
+                      transition: 'all 0.25s',
+                    }}
+                  >
+                    <MapPin size={15} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        color: activeIdx === idx ? SHINE_COLORS.cream : SHINE_COLORS.muted,
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        margin: '0 0 2px',
+                        transition: 'color 0.25s',
+                      }}
+                    >
+                      {loc.name}
+                    </p>
+                    <p
+                      style={{
+                        color: SHINE_COLORS.dim,
+                        fontSize: '0.72rem',
+                        margin: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {loc.address}
+                    </p>
+                  </div>
+                  <ChevronRight
+                    size={16}
+                    style={{
+                      color: activeIdx === idx ? SHINE_COLORS.orange : SHINE_COLORS.dim,
+                      flexShrink: 0,
+                      transition: 'color 0.25s',
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </ScrollReveal>
+
+          {/* Detail panel */}
+          <ScrollReveal direction="right" key={`detail-${activeIdx}`}>
+            <div
+              style={{
+                background: SHINE_COLORS.card,
+                border: `1px solid ${SHINE_COLORS.border}`,
+                padding: 'clamp(28px, 4vw, 48px)',
+                position: 'relative',
+                overflow: 'hidden',
+                height: '100%',
+              }}
+            >
+              {/* Blue corner accent */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '2px',
+                  background: `linear-gradient(to right, ${SHINE_COLORS.orange}, transparent)`,
+                }}
+              />
+
+              {/* Location name */}
+              <div style={{ marginBottom: '32px' }}>
+                <span
+                  style={{
+                    color: SHINE_COLORS.orange,
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.35em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Sucursal
+                </span>
                 <h3
-                  className="text-xl font-black text-white"
+                  style={{
+                    color: SHINE_COLORS.cream,
+                    fontSize: 'clamp(1.4rem, 2.5vw, 2rem)',
+                    fontWeight: 900,
+                    letterSpacing: '-0.02em',
+                    margin: '4px 0 0',
+                    lineHeight: 1.1,
+                  }}
                 >
-                  Sucursal {active.name}
+                  {active.name}
                 </h3>
               </div>
 
-              <div className="space-y-6 mb-8">
-                {/* Address */}
-                <div className="flex items-start gap-4">
+              {/* Info rows */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                   <div
-                    className="w-9 h-9 flex items-center justify-center flex-shrink-0 mt-0.5"
                     style={{
-                      background: `${SHINE_COLORS.gold}12`,
-                      color: SHINE_COLORS.gold,
+                      width: '34px',
+                      height: '34px',
+                      background: SHINE_COLORS.orangeDim,
+                      border: `1px solid ${SHINE_COLORS.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: SHINE_COLORS.orange,
+                      flexShrink: 0,
                     }}
                   >
-                    <MapPin className="w-4 h-4" />
+                    <MapPin size={14} />
                   </div>
                   <div>
                     <p
-                      className="text-xs font-bold uppercase tracking-[0.2em] mb-1"
-                      style={{ color: `${SHINE_COLORS.cream}50` }}
+                      style={{
+                        color: SHINE_COLORS.dim,
+                        fontSize: '0.62rem',
+                        letterSpacing: '0.2em',
+                        textTransform: 'uppercase',
+                        margin: '0 0 4px',
+                      }}
                     >
                       Dirección
                     </p>
-                    <p className="font-medium" style={{ color: SHINE_COLORS.cream }}>
+                    <p style={{ color: SHINE_COLORS.cream, fontSize: '0.9rem', margin: 0 }}>
                       {active.address}
                     </p>
                   </div>
                 </div>
 
-                {/* Phone */}
-                <div className="flex items-start gap-4">
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                   <div
-                    className="w-9 h-9 flex items-center justify-center flex-shrink-0 mt-0.5"
                     style={{
-                      background: `${SHINE_COLORS.gold}12`,
-                      color: SHINE_COLORS.gold,
+                      width: '34px',
+                      height: '34px',
+                      background: SHINE_COLORS.orangeDim,
+                      border: `1px solid ${SHINE_COLORS.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: SHINE_COLORS.orange,
+                      flexShrink: 0,
                     }}
                   >
-                    <Phone className="w-4 h-4" />
+                    <Clock size={14} />
                   </div>
                   <div>
                     <p
-                      className="text-xs font-bold uppercase tracking-[0.2em] mb-1"
-                      style={{ color: `${SHINE_COLORS.cream}50` }}
+                      style={{
+                        color: SHINE_COLORS.dim,
+                        fontSize: '0.62rem',
+                        letterSpacing: '0.2em',
+                        textTransform: 'uppercase',
+                        margin: '0 0 4px',
+                      }}
+                    >
+                      Horarios
+                    </p>
+                    <p style={{ color: SHINE_COLORS.cream, fontSize: '0.9rem', margin: 0 }}>
+                      {active.schedule}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                  <div
+                    style={{
+                      width: '34px',
+                      height: '34px',
+                      background: SHINE_COLORS.orangeDim,
+                      border: `1px solid ${SHINE_COLORS.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: SHINE_COLORS.orange,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Phone size={14} />
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        color: SHINE_COLORS.dim,
+                        fontSize: '0.62rem',
+                        letterSpacing: '0.2em',
+                        textTransform: 'uppercase',
+                        margin: '0 0 4px',
+                      }}
                     >
                       Teléfono
                     </p>
                     <a
                       href={`tel:${active.phone}`}
-                      className="font-medium transition-colors hover:underline"
-                      style={{ color: SHINE_COLORS.cream }}
+                      style={{
+                        color: SHINE_COLORS.cream,
+                        fontSize: '0.9rem',
+                        textDecoration: 'none',
+                        transition: 'color 0.2s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.orange; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.cream; }}
                     >
                       {active.phone}
                     </a>
-                  </div>
-                </div>
-
-                {/* Schedule */}
-                <div className="flex items-start gap-4">
-                  <div
-                    className="w-9 h-9 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{
-                      background: `${SHINE_COLORS.gold}12`,
-                      color: SHINE_COLORS.gold,
-                    }}
-                  >
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p
-                      className="text-xs font-bold uppercase tracking-[0.2em] mb-1"
-                      style={{ color: `${SHINE_COLORS.cream}50` }}
-                    >
-                      Horarios
-                    </p>
-                    <p className="font-medium" style={{ color: SHINE_COLORS.cream }}>
-                      {active.schedule}
-                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Features */}
               {active.features.length > 0 && (
-                <div className="mb-8">
-                  <p
-                    className="text-xs font-bold uppercase tracking-[0.2em] mb-3"
-                    style={{ color: `${SHINE_COLORS.cream}50` }}
-                  >
-                    Características
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                <div style={{ marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {active.features.map((feat: string, i: number) => (
                       <span
                         key={i}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide"
                         style={{
-                          color: SHINE_COLORS.gold,
-                          background: `${SHINE_COLORS.gold}10`,
-                          border: `1px solid ${SHINE_COLORS.gold}25`,
+                          color: SHINE_COLORS.orange,
+                          background: SHINE_COLORS.orangeDim,
+                          border: `1px solid ${SHINE_COLORS.border}`,
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.15em',
+                          textTransform: 'uppercase',
+                          padding: '5px 12px',
                         }}
                       >
-                        <Sparkles className="w-3 h-3" />
                         {feat}
                       </span>
                     ))}
@@ -211,97 +352,46 @@ export function ShineSushiLocations({ content }: SectionProps) {
                 href={active.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 py-4 font-bold text-sm uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-95"
                 style={{
-                  backgroundColor: SHINE_COLORS.orange,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: SHINE_COLORS.orange,
                   color: '#fff',
-                  boxShadow: `0 8px 24px ${SHINE_COLORS.orange}40`,
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  padding: '14px 28px',
+                  borderRadius: '2px',
+                  boxShadow: `0 8px 32px rgba(232,117,26,0.3)`,
+                  transition: 'all 0.25s',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 16px 48px rgba(232,117,26,0.4)`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 32px rgba(232,117,26,0.3)`;
                 }}
               >
-                <Navigation className="w-4 h-4" />
-                Cómo Llegar — Google Maps
-              </a>
-            </div>
-          </ScrollReveal>
-
-          {/* Map placeholder with animated pin */}
-          <ScrollReveal direction="right" className="min-h-[400px]">
-            <div
-              className="h-full relative overflow-hidden group min-h-[400px]"
-              style={{
-                background: SHINE_COLORS.surface,
-                border: `1px solid ${SHINE_COLORS.gold}15`,
-                boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
-              }}
-            >
-              {/* Grid pattern */}
-              <div
-                className="absolute inset-0 opacity-[0.06]"
-                style={{
-                  backgroundImage: `radial-gradient(circle, ${SHINE_COLORS.gold} 1px, transparent 1px)`,
-                  backgroundSize: '28px 28px',
-                }}
-              />
-
-              {/* Ping marker */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="relative">
-                  <div
-                    className="absolute -inset-6 rounded-full animate-ping opacity-20"
-                    style={{ background: SHINE_COLORS.gold }}
-                  />
-                  <div
-                    className="absolute -inset-3 rounded-full opacity-30"
-                    style={{ background: SHINE_COLORS.gold }}
-                  />
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center shadow-2xl"
-                    style={{
-                      background: SHINE_COLORS.gold,
-                      color: SHINE_COLORS.primary,
-                      boxShadow: `0 0 40px ${SHINE_COLORS.gold}60`,
-                    }}
-                  >
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Location label */}
-              <div
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 text-sm font-bold whitespace-nowrap z-10"
-                style={{
-                  background: SHINE_COLORS.primary,
-                  color: SHINE_COLORS.gold,
-                  border: `1px solid ${SHINE_COLORS.gold}30`,
-                }}
-              >
-                {active.name} · {active.address}
-              </div>
-
-              {/* Hover overlay */}
-              <a
-                href={active.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
-                style={{
-                  background: `${SHINE_COLORS.primary}D8`,
-                  backdropFilter: 'blur(4px)',
-                }}
-              >
-                <span
-                  className="flex items-center gap-2 font-bold text-lg tracking-wider uppercase"
-                  style={{ color: SHINE_COLORS.gold }}
-                >
-                  <Navigation className="w-5 h-5" />
-                  Ver en Google Maps
-                </span>
+                <Navigation size={15} />
+                Ver en Google Maps
               </a>
             </div>
           </ScrollReveal>
         </div>
       </div>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .locations-grid {
+            grid-template-columns: 360px 1fr !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }

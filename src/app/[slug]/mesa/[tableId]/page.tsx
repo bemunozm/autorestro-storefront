@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Utensils, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { Utensils, Users, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/lib/api';
 import Image from 'next/image';
 
@@ -38,6 +39,7 @@ export default function TableJoinPage() {
   const [guestName, setGuestName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -65,6 +67,7 @@ export default function TableJoinPage() {
     if (!guestName.trim()) return;
     try {
       setIsJoining(true);
+      setJoinError(null);
       // Open session
       const openRes = await api.post(`/storefront/${slug}/sessions/open`, { tableId });
       const sessionId = openRes.data.id;
@@ -84,6 +87,7 @@ export default function TableJoinPage() {
       router.push(`${basePath}/menu`);
     } catch (error) {
       console.error('Error opening session:', error);
+      setJoinError('No se pudo abrir la mesa. Intenta nuevamente.');
     } finally {
       setIsJoining(false);
     }
@@ -93,6 +97,7 @@ export default function TableJoinPage() {
     if (!guestName.trim() || !session) return;
     try {
       setIsJoining(true);
+      setJoinError(null);
       const joinRes = await api.post(`/storefront/${slug}/sessions/${session.id}/join`, { guestName });
       const { guestToken, sessionId, tableId: joinedTableId } = joinRes.data;
 
@@ -107,6 +112,7 @@ export default function TableJoinPage() {
       router.push(`${basePath}/menu`);
     } catch (error) {
       console.error('Error joining session:', error);
+      setJoinError('No se pudo unirse a la mesa. Intenta nuevamente.');
     } finally {
       setIsJoining(false);
     }
@@ -171,15 +177,23 @@ export default function TableJoinPage() {
                 placeholder="Tu nombre"
                 className="h-12 rounded-xl bg-muted/50 border-transparent focus:border-primary transition-all"
                 value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
+                onChange={(e) => { setGuestName(e.target.value); setJoinError(null); }}
                 autoComplete="off"
+                autoFocus
               />
             </div>
+
+            {joinError && (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{joinError}</AlertDescription>
+              </Alert>
+            )}
 
             <Button
               className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg transition-transform active:scale-[0.98]"
               style={{ backgroundColor: primaryColor }}
-              disabled={!guestName.trim() || isJoining}
+              disabled={guestName.trim().length < 2 || isJoining}
               onClick={session ? handleJoinSession : handleOpenSession}
             >
               {isJoining ? (

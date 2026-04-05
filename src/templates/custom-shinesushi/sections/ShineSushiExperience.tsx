@@ -10,132 +10,230 @@ export function ShineSushiExperience({ content }: SectionProps) {
   const experiences =
     rawExperiences && rawExperiences.length > 0 ? rawExperiences : DEFAULT_EXPERIENCES;
   const title = (content.title as string | undefined) || 'La Experiencia Shine';
-  const subtitle =
-    (content.subtitle as string | undefined) ||
-    'Más que sushi — un ambiente único que combina sabor, música y la mejor vista del norte de Chile';
 
   return (
     <section
-      className="py-24 px-6 overflow-hidden"
-      style={{ backgroundColor: SHINE_COLORS.surface }}
+      style={{
+        backgroundColor: SHINE_COLORS.bg,
+        padding: 'clamp(80px, 12vh, 140px) 0',
+        overflow: 'hidden',
+      }}
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <ScrollReveal direction="up" className="text-center mb-16">
+      {/* Section header */}
+      <ScrollReveal direction="up">
+        <div
+          style={{
+            padding: '0 clamp(24px, 6vw, 80px)',
+            maxWidth: '1400px',
+            margin: '0 auto 64px',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '24px',
+          }}
+        >
+          <div>
+            <p
+              style={{
+                color: SHINE_COLORS.orange,
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                letterSpacing: '0.4em',
+                textTransform: 'uppercase',
+                marginBottom: '12px',
+              }}
+            >
+              Vive el Momento
+            </p>
+            <h2
+              style={{
+                color: SHINE_COLORS.cream,
+                fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+                margin: 0,
+              }}
+            >
+              {title}
+            </h2>
+          </div>
           <p
-            className="text-xs font-bold tracking-[0.35em] uppercase mb-4"
-            style={{ color: SHINE_COLORS.gold }}
-          >
-            Vive el Momento
-          </p>
-          <h2
-            className="font-black text-white mb-5 leading-tight"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
-          >
-            {title}
-          </h2>
-          <p
-            className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-5"
-            style={{ color: `${SHINE_COLORS.cream}99` }}
-          >
-            {subtitle}
-          </p>
-          <div
-            className="h-px w-20 mx-auto"
             style={{
-              background: `linear-gradient(to right, transparent, ${SHINE_COLORS.gold}, transparent)`,
+              color: SHINE_COLORS.muted,
+              fontSize: '0.9rem',
+              lineHeight: 1.7,
+              maxWidth: '380px',
+              margin: 0,
             }}
-          />
-        </ScrollReveal>
+          >
+            Un ambiente único que combina sabor, música y la mejor vista del norte de Chile
+          </p>
+        </div>
+      </ScrollReveal>
 
-        {/* Experiences grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {experiences.map((exp: ShineExperience, idx: number) => (
-            <ScrollReveal key={idx} direction="up" delay={idx * 100}>
-              <div
-                className="group relative h-80 md:h-96 overflow-hidden cursor-pointer"
-                style={{
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                }}
-              >
-                {/* Image */}
-                {exp.imageUrl && (
-                  <Image
-                    src={exp.imageUrl}
-                    alt={exp.title}
-                    fill
-                    loading="lazy"
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                )}
-
-                {/* Default dark bg if no image */}
-                {!exp.imageUrl && (
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: SHINE_COLORS.primary }}
-                  />
-                )}
-
-                {/* Base overlay */}
-                <div
-                  className="absolute inset-0 transition-opacity duration-500"
-                  style={{
-                    background: `linear-gradient(to top, ${SHINE_COLORS.primary}E0 0%, ${SHINE_COLORS.primary}40 55%, transparent 100%)`,
-                  }}
+      {/* Full-width experience cards — horizontal strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${experiences.length}, 1fr)`,
+          gap: '2px',
+        }}
+        className="experience-grid"
+      >
+        {experiences.map((exp: ShineExperience, idx: number) => (
+          <ScrollReveal key={idx} direction="none" delay={idx * 80}>
+            <div
+              style={{
+                position: 'relative',
+                aspectRatio: '3/4',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                minHeight: '480px',
+              }}
+              className="experience-card group"
+            >
+              {exp.imageUrl ? (
+                <Image
+                  src={exp.imageUrl}
+                  alt={exp.title}
+                  fill
+                  loading="lazy"
+                  className="object-cover transition-transform duration-[1200ms] group-hover:scale-110"
                 />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, background: SHINE_COLORS.surface }} />
+              )}
 
-                {/* Hover overlay */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-8 text-center"
+              {/* Persistent cinematic gradient */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: `linear-gradient(to top, rgba(12,8,4,0.98) 0%, rgba(12,8,4,0.5) 45%, rgba(12,8,4,0.1) 100%)`,
+                }}
+              />
+
+              {/* Number watermark */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '24px',
+                  right: '24px',
+                  color: `rgba(232,117,26,0.12)`,
+                  fontSize: '5rem',
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  letterSpacing: '-0.05em',
+                  userSelect: 'none',
+                  transition: 'color 0.5s',
+                }}
+                className="experience-num"
+              >
+                {String(idx + 1).padStart(2, '0')}
+              </div>
+
+              {/* Top blue accent line — expands on hover */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  height: '2px',
+                  width: '0',
+                  background: SHINE_COLORS.orange,
+                  transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+                }}
+                className="experience-line"
+              />
+
+              {/* Content */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  padding: '32px',
+                  transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1)',
+                }}
+                className="experience-content"
+              >
+                <p
                   style={{
-                    background: `${SHINE_COLORS.primary}D0`,
-                    backdropFilter: 'blur(2px)',
+                    color: SHINE_COLORS.orange,
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.35em',
+                    textTransform: 'uppercase',
+                    marginBottom: '8px',
+                    opacity: 0,
+                    transition: 'opacity 0.4s 0.1s',
+                  }}
+                  className="experience-desc-label"
+                >
+                  Experiencia {String(idx + 1).padStart(2, '0')}
+                </p>
+
+                <h3
+                  style={{
+                    color: SHINE_COLORS.cream,
+                    fontSize: 'clamp(1.4rem, 2vw, 1.9rem)',
+                    fontWeight: 900,
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.1,
+                    margin: '0 0 12px',
                   }}
                 >
-                  {/* Gold accent line */}
-                  <div
-                    className="h-px w-12 mb-5"
-                    style={{ background: SHINE_COLORS.gold }}
-                  />
-                  <p
-                    className="text-base leading-relaxed"
-                    style={{ color: `${SHINE_COLORS.cream}E0` }}
-                  >
-                    {exp.description}
-                  </p>
-                  <div
-                    className="h-px w-12 mt-5"
-                    style={{ background: SHINE_COLORS.gold }}
-                  />
-                </div>
+                  {exp.title}
+                </h3>
 
-                {/* Title (always visible at bottom) */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 transition-all duration-500 group-hover:-translate-y-2">
-                  {/* Number decoration */}
-                  <p
-                    className="text-xs font-bold tracking-[0.3em] uppercase mb-2"
-                    style={{ color: `${SHINE_COLORS.gold}90` }}
-                  >
-                    {String(idx + 1).padStart(2, '0')}
-                  </p>
-                  <h3
-                    className="font-black text-white text-2xl"
-                  >
-                    {exp.title}
-                  </h3>
-                </div>
-
-                {/* Gold corner accent */}
-                <div
-                  className="absolute top-0 left-0 w-16 h-0.5 transition-all duration-500 group-hover:w-full"
-                  style={{ background: SHINE_COLORS.gold }}
-                />
+                <p
+                  style={{
+                    color: SHINE_COLORS.muted,
+                    fontSize: '0.85rem',
+                    lineHeight: 1.65,
+                    margin: 0,
+                    maxHeight: '0',
+                    overflow: 'hidden',
+                    transition: 'max-height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s',
+                    opacity: 0,
+                  }}
+                  className="experience-desc"
+                >
+                  {exp.description}
+                </p>
               </div>
-            </ScrollReveal>
-          ))}
-        </div>
+            </div>
+          </ScrollReveal>
+        ))}
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .experience-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .experience-card {
+            aspect-ratio: 16/9 !important;
+            min-height: 300px !important;
+          }
+        }
+        .experience-card:hover .experience-line {
+          width: 100% !important;
+        }
+        .experience-card:hover .experience-num {
+          color: rgba(232,117,26,0.25) !important;
+        }
+        .experience-card:hover .experience-desc-label {
+          opacity: 1 !important;
+        }
+        .experience-card:hover .experience-desc {
+          max-height: 120px !important;
+          opacity: 1 !important;
+        }
+      `}</style>
     </section>
   );
 }

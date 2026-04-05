@@ -2,219 +2,369 @@
 
 import Image from 'next/image';
 import { Phone, Mail, MapPin } from 'lucide-react';
-import { SectionProps } from '../../types';
-import { SHINE_COLORS } from '../data/defaults';
 
-// Inline SVG icons — lucide-react in this project version doesn't include brand icons
-function IconInstagram({ className }: { className?: string }) {
+function InstagramIcon() {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
+import { SectionProps } from '../../types';
+import { SHINE_COLORS } from '../data/defaults';
+import { useRestaurant } from '@/providers/restaurant-provider';
 
-function IconFacebook({ className }: { className?: string }) {
+function FacebookIcon() {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
     </svg>
   );
 }
 
 export function ShineSushiFooter({ content, restaurant }: SectionProps) {
+  const { basePath } = useRestaurant();
   const email = (content.email as string | undefined) || 'contacto@shinesushi.cl';
   const phone = (content.phone as string | undefined) || restaurant.phone || '+56 57 244 3313';
   const instagram = (content.instagram as string | undefined) || 'https://instagram.com/shinesushi_';
   const facebook = (content.facebook as string | undefined) || 'https://facebook.com/shinesushii';
-  const whatsapp = content.whatsapp as string | undefined;
+
+  const navLinks = [
+    { label: 'Inicio', href: '#hero' },
+    { label: 'Menú', href: `${basePath}/menu` },
+    { label: 'Nosotros', href: '#about' },
+    { label: 'Sucursales', href: '#locations' },
+  ];
 
   return (
     <footer
-      className="py-16 px-6"
-      style={{ backgroundColor: SHINE_COLORS.primary, borderTop: `1px solid ${SHINE_COLORS.gold}15` }}
+      style={{
+        backgroundColor: SHINE_COLORS.bg,
+        borderTop: `1px solid ${SHINE_COLORS.border}`,
+        padding: 'clamp(56px, 8vh, 96px) clamp(24px, 6vw, 80px) clamp(32px, 4vh, 48px)',
+      }}
     >
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-          {/* Brand column */}
-          <div>
-            {restaurant.logoUrl ? (
-              <div className="relative h-16 w-16 mb-5">
-                <Image
-                  src={restaurant.logoUrl}
-                  alt={restaurant.name}
-                  fill
-                  className="object-contain"
-                  loading="lazy"
-                />
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+
+        {/* Main footer grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 'clamp(40px, 6vw, 80px)',
+            marginBottom: '64px',
+          }}
+        >
+          {/* Brand */}
+          <div style={{ gridColumn: 'span 1' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              {restaurant.logoUrl ? (
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Image
+                    src={restaurant.logoUrl}
+                    alt={restaurant.name}
+                    fill
+                    className="object-contain"
+                    loading="lazy"
+                  />
+                </div>
+              ) : null}
+              <div style={{ lineHeight: 1 }}>
+                <span
+                  style={{
+                    display: 'block',
+                    color: SHINE_COLORS.cream,
+                    fontWeight: 900,
+                    fontSize: '1rem',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Shine
+                </span>
+                <span
+                  style={{
+                    display: 'block',
+                    color: SHINE_COLORS.orange,
+                    fontWeight: 300,
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.35em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Sushi
+                </span>
               </div>
-            ) : null}
-            <h3 className="font-black text-white text-xl mb-3 tracking-wider uppercase">
-              {restaurant.name}
-            </h3>
+            </div>
+
             <p
-              className="text-sm leading-relaxed mb-5"
-              style={{ color: `${SHINE_COLORS.cream}70` }}
+              style={{
+                color: SHINE_COLORS.muted,
+                fontSize: '0.82rem',
+                lineHeight: 1.75,
+                margin: '0 0 20px',
+                maxWidth: '220px',
+              }}
             >
-              Restobar & Delivery · Fusión Nikkei Premium
+              Fusión Nikkei Premium. Rolls artesanales, ceviches y tiraditos del Pacífico.
             </p>
-            <div
-              className="h-px w-12"
-              style={{ background: `linear-gradient(to right, ${SHINE_COLORS.gold}, transparent)` }}
-            />
+
+            {/* Social icons */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <a
+                href={instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram Shine Sushi"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: SHINE_COLORS.orangeDim,
+                  border: `1px solid ${SHINE_COLORS.border}`,
+                  color: SHINE_COLORS.orange,
+                  borderRadius: '6px',
+                  transition: 'all 0.25s',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = SHINE_COLORS.orange;
+                  (e.currentTarget as HTMLElement).style.color = '#fff';
+                  (e.currentTarget as HTMLElement).style.borderColor = SHINE_COLORS.orange;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = SHINE_COLORS.orangeDim;
+                  (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.orange;
+                  (e.currentTarget as HTMLElement).style.borderColor = SHINE_COLORS.border;
+                }}
+              >
+                <InstagramIcon />
+              </a>
+              <a
+                href={facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook Shine Sushi"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: SHINE_COLORS.orangeDim,
+                  border: `1px solid ${SHINE_COLORS.border}`,
+                  color: SHINE_COLORS.orange,
+                  borderRadius: '6px',
+                  transition: 'all 0.25s',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = SHINE_COLORS.orange;
+                  (e.currentTarget as HTMLElement).style.color = '#fff';
+                  (e.currentTarget as HTMLElement).style.borderColor = SHINE_COLORS.orange;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = SHINE_COLORS.orangeDim;
+                  (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.orange;
+                  (e.currentTarget as HTMLElement).style.borderColor = SHINE_COLORS.border;
+                }}
+              >
+                <FacebookIcon />
+              </a>
+            </div>
           </div>
 
-          {/* Contact column */}
+          {/* Navigation */}
           <div>
             <p
-              className="text-xs font-bold tracking-[0.3em] uppercase mb-6"
-              style={{ color: SHINE_COLORS.gold }}
+              style={{
+                color: SHINE_COLORS.orange,
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                marginBottom: '20px',
+              }}
+            >
+              Explorar
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    style={{
+                      color: SHINE_COLORS.muted,
+                      textDecoration: 'none',
+                      fontSize: '0.85rem',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.cream; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.muted; }}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <p
+              style={{
+                color: SHINE_COLORS.orange,
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                marginBottom: '20px',
+              }}
             >
               Contacto
             </p>
-            <ul className="space-y-4">
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <li>
                 <a
                   href={`tel:${phone}`}
-                  className="flex items-center gap-3 text-sm transition-colors hover:opacity-80"
-                  style={{ color: `${SHINE_COLORS.cream}CC` }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: SHINE_COLORS.muted,
+                    textDecoration: 'none',
+                    fontSize: '0.85rem',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.cream; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.muted; }}
                 >
-                  <Phone className="w-4 h-4 shrink-0" style={{ color: SHINE_COLORS.gold }} />
+                  <Phone size={13} style={{ color: SHINE_COLORS.orange, flexShrink: 0 }} />
                   {phone}
                 </a>
               </li>
               <li>
                 <a
                   href={`mailto:${email}`}
-                  className="flex items-center gap-3 text-sm transition-colors hover:opacity-80"
-                  style={{ color: `${SHINE_COLORS.cream}CC` }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: SHINE_COLORS.muted,
+                    textDecoration: 'none',
+                    fontSize: '0.85rem',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.cream; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = SHINE_COLORS.muted; }}
                 >
-                  <Mail className="w-4 h-4 shrink-0" style={{ color: SHINE_COLORS.gold }} />
+                  <Mail size={13} style={{ color: SHINE_COLORS.orange, flexShrink: 0 }} />
                   {email}
                 </a>
               </li>
               {restaurant.address && (
                 <li>
                   <span
-                    className="flex items-start gap-3 text-sm"
-                    style={{ color: `${SHINE_COLORS.cream}CC` }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                      color: SHINE_COLORS.muted,
+                      fontSize: '0.85rem',
+                    }}
                   >
-                    <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SHINE_COLORS.gold }} />
+                    <MapPin size={13} style={{ color: SHINE_COLORS.orange, flexShrink: 0, marginTop: '2px' }} />
                     {restaurant.address}
                   </span>
-                </li>
-              )}
-              {whatsapp && (
-                <li>
-                  <a
-                    href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-sm transition-colors hover:opacity-80"
-                    style={{ color: `${SHINE_COLORS.cream}CC` }}
-                  >
-                    <span
-                      className="w-4 h-4 shrink-0 text-center font-bold text-xs"
-                      style={{ color: SHINE_COLORS.gold }}
-                    >
-                      WA
-                    </span>
-                    WhatsApp
-                  </a>
                 </li>
               )}
             </ul>
           </div>
 
-          {/* Social + Delivery column */}
+          {/* Delivery + hours */}
           <div>
             <p
-              className="text-xs font-bold tracking-[0.3em] uppercase mb-6"
-              style={{ color: SHINE_COLORS.gold }}
-            >
-              Síguenos
-            </p>
-            <div className="flex gap-4 mb-8">
-              <a
-                href={instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center transition-all duration-300 hover:scale-110"
-                style={{
-                  background: `${SHINE_COLORS.gold}15`,
-                  color: SHINE_COLORS.gold,
-                  border: `1px solid ${SHINE_COLORS.gold}30`,
-                }}
-                aria-label="Instagram Shine Sushi"
-              >
-                <IconInstagram className="w-4 h-4" />
-              </a>
-              <a
-                href={facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center transition-all duration-300 hover:scale-110"
-                style={{
-                  background: `${SHINE_COLORS.gold}15`,
-                  color: SHINE_COLORS.gold,
-                  border: `1px solid ${SHINE_COLORS.gold}30`,
-                }}
-                aria-label="Facebook Shine Sushi"
-              >
-                <IconFacebook className="w-4 h-4" />
-              </a>
-            </div>
-            <p
-              className="text-xs font-bold tracking-[0.3em] uppercase mb-4"
-              style={{ color: `${SHINE_COLORS.cream}50` }}
+              style={{
+                color: SHINE_COLORS.orange,
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                marginBottom: '20px',
+              }}
             >
               Pide a Domicilio
             </p>
-            <div className="flex gap-3">
+            <div style={{ marginBottom: '20px' }}>
               <span
-                className="px-3 py-1.5 text-xs font-bold tracking-wider uppercase"
                 style={{
-                  color: `${SHINE_COLORS.cream}CC`,
-                  background: `${SHINE_COLORS.cream}08`,
-                  border: `1px solid ${SHINE_COLORS.cream}15`,
-                }}
-              >
-                Rappi
-              </span>
-              <span
-                className="px-3 py-1.5 text-xs font-bold tracking-wider uppercase"
-                style={{
-                  color: `${SHINE_COLORS.cream}CC`,
-                  background: `${SHINE_COLORS.cream}08`,
-                  border: `1px solid ${SHINE_COLORS.cream}15`,
+                  display: 'inline-block',
+                  color: SHINE_COLORS.muted,
+                  background: SHINE_COLORS.orangeDim,
+                  border: `1px solid ${SHINE_COLORS.border}`,
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  padding: '6px 14px',
                 }}
               >
                 Uber Eats
               </span>
             </div>
+            <p
+              style={{
+                color: SHINE_COLORS.dim,
+                fontSize: '0.75rem',
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              Lun–Dom · 12:30 – 00:00<br />
+              4 sucursales en Iquique<br />
+              y Alto Hospicio
+            </p>
           </div>
         </div>
 
-        {/* Divider */}
+        {/* Bottom bar */}
         <div
-          className="h-px w-full mb-8"
           style={{
-            background: `linear-gradient(to right, transparent, ${SHINE_COLORS.gold}20, transparent)`,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            paddingTop: '24px',
+            borderTop: `1px solid ${SHINE_COLORS.border}`,
           }}
-        />
-
-        {/* Copyright */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-xs" style={{ color: `${SHINE_COLORS.cream}40` }}>
+        >
+          <p style={{ color: SHINE_COLORS.dim, fontSize: '0.72rem', margin: 0 }}>
             © {new Date().getFullYear()} {restaurant.name}. Todos los derechos reservados.
           </p>
           <p
-            className="text-xs tracking-[0.2em] uppercase"
-            style={{ color: `${SHINE_COLORS.cream}30` }}
+            style={{
+              color: SHINE_COLORS.dim,
+              fontSize: '0.62rem',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              margin: 0,
+            }}
           >
-            Powered by AutoRestro Chile
+            Powered by AutoRestro
           </p>
         </div>
       </div>

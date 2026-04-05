@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import confetti from 'canvas-confetti';
 
 interface SessionSummary {
@@ -45,12 +46,25 @@ export default function SessionFinishedPage() {
     }
   }, [slug, sessionId]);
 
+  // Fetch summary then clear session on mount
   useEffect(() => {
-    if (token && sessionId) {
-      fetchSummary();
-    }
+    const finalize = async () => {
+      if (token && sessionId) {
+        await fetchSummary();
+      }
+      clearSession();
+      logout();
+      clearCart();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+      }
+    };
+    finalize();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Confetti!
+  // Confetti on mount
+  useEffect(() => {
     const duration = 3 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
@@ -69,17 +83,8 @@ export default function SessionFinishedPage() {
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
     }, 250);
 
-    // Cleanup
-    return () => {
-      clearInterval(interval);
-      clearSession();
-      logout();
-      clearCart();
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-      }
-    };
-  }, [clearCart, clearSession, fetchSummary, logout, sessionId, token]);
+    return () => clearInterval(interval);
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -106,15 +111,21 @@ export default function SessionFinishedPage() {
           </p>
         </div>
 
-        <Card className="border-none bg-muted/30 rounded-3xl overflow-hidden">
+        <Card className="border-none bg-muted/30 rounded-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-500">
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
               <span>Platillos disfrutados</span>
-              <span className="text-foreground font-bold">{summary?.totalItems || 0}</span>
+              {summary === null
+                ? <Skeleton className="h-4 w-8 rounded" />
+                : <span className="text-foreground font-bold">{summary.totalItems}</span>
+              }
             </div>
             <div className="flex justify-between items-center text-lg font-bold">
               <span>Total de la mesa</span>
-              <span className="text-primary">{formatPrice(summary?.totalSpent || 0)}</span>
+              {summary === null
+                ? <Skeleton className="h-5 w-24 rounded" />
+                : <span className="text-primary">{formatPrice(summary.totalSpent)}</span>
+              }
             </div>
           </CardContent>
         </Card>

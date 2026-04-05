@@ -91,11 +91,14 @@ export default function CheckoutPage() {
     createOrder(payload, {
       onSuccess: () => {
         setIsSuccess(true);
+        const primary = typeof window !== 'undefined'
+          ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#22c55e'
+          : '#22c55e';
         confetti({
           particleCount: 150,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ['#22c55e', '#10b981', '#3b82f6']
+          colors: [primary, '#f59e0b', '#10b981']
         });
         clearCart();
       },
@@ -114,10 +117,10 @@ export default function CheckoutPage() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="bg-green-100 p-6 rounded-full mb-6 animate-bounce">
+        <div className="bg-green-100 p-6 rounded-full mb-6 animate-in zoom-in-50 duration-500">
           <CheckCircle2 size={64} className="text-green-600" />
         </div>
-        <h1 className="text-3xl font-bold mb-2">¡Pedido confirmado!</h1>
+        <h1 className="text-3xl font-bold mb-2 animate-in fade-in slide-in-from-bottom-4 duration-500">¡Pedido confirmado!</h1>
         <p className="text-gray-600 mb-8 max-w-md">
           {isDineIn 
             ? "Tu pedido ha sido enviado a la cocina. Te avisaremos cuando esté listo en tu mesa."
@@ -127,7 +130,7 @@ export default function CheckoutPage() {
         <div className="flex flex-col w-full max-w-md gap-3">
           <Button 
             onClick={() => router.push(`${basePath}/menu`)}
-            className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-lg font-bold shadow-lg"
+            className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:opacity-90 active:opacity-80 text-lg font-bold shadow-lg"
           >
             {isDineIn ? 'Pedir algo más' : 'Volver al menú'}
           </Button>
@@ -301,7 +304,7 @@ export default function CheckoutPage() {
             <Button 
               type="submit"
               disabled={isPending}
-              className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+              className="w-full h-14 rounded-2xl bg-[var(--color-primary)] hover:opacity-90 active:opacity-80 text-xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
             >
               {isPending ? (
                 <>
@@ -309,7 +312,7 @@ export default function CheckoutPage() {
                   Procesando...
                 </>
               ) : (
-                'Confirmar Pedido'
+                `Confirmar · ${formatPrice(getTotal())}`
               )}
             </Button>
           </div>

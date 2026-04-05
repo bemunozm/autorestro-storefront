@@ -100,6 +100,19 @@ export default function MenuPage() {
         </div>
       </header>
 
+      {/* Mobile search bar */}
+      <div className="lg:hidden sticky top-16 z-20 bg-white border-b px-4 py-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Input
+            placeholder="Buscar platillo..."
+            className="pl-9 rounded-full bg-gray-50 border-none h-9 focus-visible:ring-1 focus-visible:ring-gray-200 text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* Dine-in Banner */}
       {isDineIn && (
         <div className="bg-primary px-4 py-2 flex items-center justify-between shadow-sm sticky top-16 z-20 transition-all">
@@ -122,7 +135,7 @@ export default function MenuPage() {
       <div className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full">
         {/* Categories (Sidebar/Tabs) */}
         <aside className="lg:w-64 lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 p-4 lg:border-r bg-white lg:bg-transparent overflow-y-auto z-20">
-          <div className="mb-4 lg:mb-6">
+          <div className="hidden lg:block mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
@@ -134,10 +147,13 @@ export default function MenuPage() {
             </div>
           </div>
           <h2 className="hidden lg:block text-xs font-bold uppercase text-gray-400 mb-4 tracking-wider">Categorías</h2>
-          <CategoryTabs 
-            categories={menuData?.categories || []} 
+          <CategoryTabs
+            categories={menuData?.categories || []}
             activeCategory={activeCategoryId}
-            onCategoryChange={setActiveCategoryId}
+            onCategoryChange={(id) => {
+              setActiveCategoryId(id);
+              document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
           />
         </aside>
 

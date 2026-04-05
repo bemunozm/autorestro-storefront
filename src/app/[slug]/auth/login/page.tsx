@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const loginSchema = z.object({
@@ -25,8 +26,6 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const params = useParams();
-  const slug = params.slug as string;
   const router = useRouter();
   const searchParams = useSearchParams();
   const { restaurant, basePath } = useRestaurant();
@@ -34,6 +33,7 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -59,20 +59,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+    <div
+      className="min-h-screen flex flex-col justify-center items-center p-4"
+      style={{ background: 'color-mix(in srgb, var(--color-primary) 8%, white)' }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           {restaurant?.logoUrl && (
-            <img 
-              src={restaurant.logoUrl} 
-              alt={restaurant.name} 
-              className="mx-auto h-20 w-auto mb-4"
-            />
+            <div className="relative mx-auto h-20 w-20 mb-4">
+              <Image
+                src={restaurant.logoUrl}
+                alt={restaurant.name}
+                fill
+                className="object-contain"
+              />
+            </div>
           )}
           <h1 className="text-2xl font-bold text-gray-900">Bienvenido a {restaurant?.name}</h1>
         </div>
 
-        <Card className="shadow-sm border-none rounded-xl">
+        <Card className="shadow-sm border-none rounded-2xl">
           <CardHeader>
             <CardTitle className="text-xl">Iniciar Sesión</CardTitle>
           </CardHeader>
@@ -92,12 +98,23 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••"
-                  {...register('password')}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••"
+                    {...register('password')}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password.message}</p>
                 )}
@@ -110,13 +127,17 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button 
-                type="submit" 
-                className="w-full text-white" 
+              <Button
+                type="submit"
+                className="w-full text-white"
                 style={{ backgroundColor: 'var(--color-primary)' }}
                 disabled={loading}
               >
-                {loading ? 'Cargando...' : 'Entrar'}
+                {loading ? (
+                  <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Cargando...</>
+                ) : (
+                  'Entrar'
+                )}
               </Button>
             </form>
           </CardContent>
