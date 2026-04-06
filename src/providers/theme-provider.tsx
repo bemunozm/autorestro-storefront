@@ -50,10 +50,12 @@ export function DynamicTheme({ children }: { children: ReactNode }) {
   const { restaurant } = useRestaurant();
   const theme = restaurant?.landingConfig?.theme;
 
+  // restaurant.primaryColor is resolved server-side from landingConfig.theme.
+  // theme?.primaryColor is the same value (both come from landingConfig.theme).
   const resolvedTheme = useMemo(() => ({
-    primary: theme?.primaryColor || restaurant?.primaryColor || '#000000',
-    secondary: theme?.secondaryColor || restaurant?.secondaryColor || '#666666',
-    accent: theme?.accentColor || theme?.secondaryColor || '#ff0000',
+    primary: restaurant?.primaryColor || theme?.primaryColor || '#000000',
+    secondary: restaurant?.secondaryColor || theme?.secondaryColor || '#666666',
+    accent: theme?.accentColor || '#ff0000',
     font: theme?.fontFamily || 'Inter, sans-serif',
     headingFont: theme?.headingFont || theme?.fontFamily || 'Inter, sans-serif',
     radius: {

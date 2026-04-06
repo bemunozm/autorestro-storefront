@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 });
 
 // URLs that should silently fail on 401 without redirecting to login
-const SILENT_401_PATTERNS = ['/loyalty/'];
+const SILENT_401_PATTERNS = ['/loyalty/', '/storefront/'];
 
 api.interceptors.response.use(
   (response) => response,

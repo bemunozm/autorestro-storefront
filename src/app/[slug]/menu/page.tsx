@@ -5,8 +5,8 @@ import { useMenu } from '@/hooks/useMenu';
 import { useDineInMode } from '@/hooks/useDineInMode';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { CategoryTabs } from '@/components/menu/CategoryTabs';
+import { MenuHero } from '@/components/menu/MenuHero';
 import { ProductCard } from '@/components/menu/ProductCard';
-import { FloatingCartButton } from '@/components/menu/FloatingCartButton';
 import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -95,6 +95,7 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <MenuHero />
       {/* Dine-in Banner */}
       {isDineIn && (
         <div className="bg-primary px-4 py-2 flex items-center justify-between shadow-sm sticky top-16 z-20 transition-all">
@@ -119,19 +120,20 @@ export default function MenuPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full">
         {/* Categories (Sidebar/Tabs) */}
-        <aside className="lg:w-64 lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 p-4 lg:border-r bg-white lg:bg-transparent overflow-y-auto z-20">
-          <div className="mb-4 lg:mb-6">
+        <aside className="lg:w-64 lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 lg:p-4 lg:border-r bg-transparent overflow-y-auto z-20">
+          {/* Search - mobile: above categories, desktop: in sidebar */}
+          <div className="p-4 lg:mb-6 lg:p-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
                 placeholder="Buscar platillo..."
-                className="pl-10 rounded-full bg-gray-50 border-none h-11 focus-visible:ring-1 focus-visible:ring-gray-200"
+                className="pl-10 rounded-full bg-white lg:bg-gray-50 border border-gray-200 lg:border-none h-11 focus-visible:ring-1 focus-visible:ring-gray-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
-          <h2 className="hidden lg:block text-xs font-bold uppercase text-gray-400 mb-4 tracking-wider">
+          <h2 className="hidden lg:block text-xs font-bold uppercase text-gray-400 mb-4 tracking-wider px-1">
             Categorías
           </h2>
           <CategoryTabs
@@ -158,11 +160,15 @@ export default function MenuPage() {
             <div className="space-y-12 pb-24">
               {filteredCategories.map((category) => (
                 <section key={category.id} id={category.id} className="scroll-mt-32">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    {category.name}
-                    <span className="h-1 flex-1 bg-gray-100 rounded-full hidden sm:block" />
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+                      {category.name}
+                    </h2>
+                    <span className="text-sm text-muted-foreground font-medium">
+                      {category.products.length} {category.products.length === 1 ? 'plato' : 'platos'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
                     {category.products.map((product) => (
                       <ProductCard key={product.id} product={product} />
                     ))}
@@ -174,7 +180,6 @@ export default function MenuPage() {
         </main>
       </div>
 
-      <FloatingCartButton />
     </div>
   );
 }

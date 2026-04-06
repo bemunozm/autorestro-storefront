@@ -23,8 +23,16 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { items, updateQuantity, removeItem, updateComment, getTotal, getItemCount } = useCartStore();
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    updateComment,
+    getTotal,
+    getItemCount,
+  } = useCartStore();
   const { basePath } = useRestaurant();
+
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -40,18 +48,18 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l">
-        <SheetHeader className="p-6 border-b flex flex-row items-center justify-between space-y-0">
-          <SheetTitle className="text-xl font-bold flex items-center gap-2">
+      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l [&>button]:hidden">
+        <SheetHeader className="px-6 py-5 border-b flex flex-row items-center justify-between space-y-0">
+          <SheetTitle className="text-lg font-bold flex items-center gap-2.5">
             Tu Carrito
             {getItemCount() > 0 && (
-              <span className="bg-(--color-primary) text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-(--color-primary) text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
                 {getItemCount()}
               </span>
             )}
           </SheetTitle>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors" aria-label="Cerrar carrito">
-            <X size={24} />
+          <button onClick={onClose} className="p-1.5 -mr-1.5 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Cerrar carrito">
+            <X size={20} className="text-gray-400" />
           </button>
         </SheetHeader>
 
@@ -178,18 +186,18 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         </div>
 
         {items.length > 0 && (
-          <SheetFooter className="p-6 border-t bg-muted sm:flex-col sm:space-x-0">
-            <div className="space-y-4 w-full">
+          <SheetFooter className="p-5 border-t bg-white sm:flex-col sm:space-x-0">
+            <div className="space-y-3 w-full">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-sm text-muted-foreground">Subtotal</span>
                 <span className="text-xl font-bold">{formatPrice(getTotal())}</span>
               </div>
-              <Link href={`${basePath}/checkout`} passHref className="w-full">
+              <Link href={`${basePath}/checkout`} className="w-full block">
                 <Button
-                  className="w-full h-12 rounded-full bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100 text-lg font-bold shadow-lg"
+                  className="w-full h-12 rounded-full bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100 text-base font-bold shadow-lg"
                   onClick={onClose}
                 >
-                  Ir a pagar
+                  Continuar al pago
                 </Button>
               </Link>
             </div>

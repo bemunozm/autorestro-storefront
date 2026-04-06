@@ -5,12 +5,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useDineInMode } from '@/hooks/useDineInMode';
-import { useCartStore } from '@/stores/cart-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { ShoppingBag, Menu, User, Bell, UtensilsCrossed, LogOut, ChevronRight, ShoppingCart } from 'lucide-react';
+import { ShoppingBag, Menu, Bell, UtensilsCrossed, LogOut, ChevronRight, ShoppingCart } from 'lucide-react';
 import { LoyaltyBadge } from '@/components/loyalty/LoyaltyBadge';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Sheet,
   SheetContent,
@@ -25,22 +23,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
 
 export function StorefrontHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { restaurant, basePath } = useRestaurant();
   const { isDineIn, tableId } = useDineInMode();
-  const { getItemCount } = useCartStore();
   const { isAuthenticated, user, logout } = useAuthStore();
 
   // Prevent hydration mismatch: Zustand stores return defaults on server,
   // real values on client after rehydration from localStorage
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => { setHasMounted(true); }, []);
-
-  const cartCount = hasMounted ? getItemCount() : 0;
 
   // Use hasMounted for auth-dependent values to match server render
   const authed = hasMounted && isAuthenticated;
@@ -66,8 +60,8 @@ export function StorefrontHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md shadow-sm">
+      <div className="container mx-auto px-4 h-16 lg:h-18 flex items-center justify-between gap-4">
         {/* Mobile Menu */}
         <div className="flex items-center gap-3 lg:hidden">
           <Sheet>
@@ -76,72 +70,79 @@ export function StorefrontHeader() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0 rounded-r-3xl border-none">
-              <SheetHeader className="p-6 text-left bg-primary/5">
+            <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0 rounded-r-3xl border-none [&>button]:hidden flex flex-col h-full">
+              {/* Header: logo/name */}
+              <SheetHeader className="px-6 py-5 text-left shrink-0">
                 <SheetTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden">
-                    {restaurant?.logoUrl ? (
-                      <img src={restaurant.logoUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <UtensilsCrossed size={20} />
-                    )}
-                  </div>
-                  <span className="font-bold truncate">{restaurant?.name}</span>
+                  {restaurant?.logoUrl ? (
+                    <img src={restaurant.logoUrl} alt={restaurant?.name} className="h-9 w-auto max-w-40 object-contain shrink-0" />
+                  ) : (
+                    <span className="font-bold text-lg truncate">{restaurant?.name}</span>
+                  )}
                 </SheetTitle>
               </SheetHeader>
 
-              {/* Mobile: user profile section */}
+              {/* User profile */}
               {authed && (
-                <>
-                  <div className="px-6 py-4 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary text-lg font-black shrink-0">
-                      {user?.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm truncate">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                      {!dineIn && (
-                        <div className="mt-1.5">
-                          <LoyaltyBadge />
-                        </div>
-                      )}
-                    </div>
+                <div className="px-6 pb-4 flex items-center gap-3 shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-(--color-primary)/10 flex items-center justify-center text-(--color-primary) text-sm font-black shrink-0">
+                    {user?.name.charAt(0).toUpperCase()}
                   </div>
-                  <Separator />
-                </>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{user?.name} {user?.lastname}</p>
+                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                  </div>
+                </div>
               )}
 
-              <div className="flex flex-col gap-2 p-6">
+              {/* Divider */}
+              <div className="mx-6 border-t border-gray-100 shrink-0" />
+
+              {/* Nav links */}
+              <nav className="flex flex-col gap-1 px-4 py-4 shrink-0">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center justify-between p-4 rounded-2xl transition-all ${
-                      pathname === link.href ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-muted'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold ${
+                      pathname === link.href
+                        ? 'bg-(--color-primary) text-white'
+                        : 'text-gray-600 active:bg-gray-100'
                     }`}
                   >
-                    <div className="flex items-center gap-3 font-bold">
-                      <link.icon className="h-5 w-5" />
-                      {link.name}
-                    </div>
-                    <ChevronRight className={`h-4 w-4 ${pathname === link.href ? 'text-white/70' : 'text-muted-foreground'}`} />
+                    <link.icon className="h-5 w-5 shrink-0" />
+                    <span className="flex-1">{link.name}</span>
+                    <ChevronRight className={`h-4 w-4 ${pathname === link.href ? 'text-white/50' : 'text-gray-300'}`} />
                   </Link>
                 ))}
+              </nav>
+
+              {/* Spacer — pushes footer to bottom */}
+              <div className="flex-1" />
+
+              {/* Footer: auth buttons or logout */}
+              <div className="px-4 pb-6 shrink-0 space-y-2">
+                <div className="mx-2 border-t border-gray-100 mb-4" />
                 {!dineIn && !authed && (
-                  <Link
-                    href={`${basePath}/auth/login`}
-                    className="flex items-center gap-3 p-4 rounded-2xl hover:bg-muted font-bold mt-4"
-                  >
-                    <User className="h-5 w-5" />
-                    Iniciar Sesión
-                  </Link>
+                  <div className="space-y-2.5">
+                    <Link href={`${basePath}/auth/login`} className="block">
+                      <button className="w-full h-11 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 active:bg-gray-50 transition-colors">
+                        Iniciar Sesión
+                      </button>
+                    </Link>
+                    <Link href={`${basePath}/auth/register`} className="block">
+                      <button className="w-full h-11 rounded-xl bg-(--color-primary) text-white text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all">
+                        Crear Cuenta
+                      </button>
+                    </Link>
+                  </div>
                 )}
                 {authed && (
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 p-4 rounded-2xl hover:bg-red-50 text-red-600 font-bold mt-auto"
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 text-sm font-medium active:bg-red-50 transition-colors"
                   >
-                    <LogOut className="h-5 w-5" />
+                    <LogOut className="h-4.5 w-4.5" />
                     Cerrar Sesión
                   </button>
                 )}
@@ -150,18 +151,15 @@ export function StorefrontHeader() {
           </Sheet>
         </div>
 
-        {/* Logo & Name */}
-        <Link href={basePath || '/'} className="flex items-center gap-2.5 flex-1 lg:flex-none truncate">
-          <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary overflow-hidden shrink-0">
-            {restaurant?.logoUrl ? (
-              <img src={restaurant.logoUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <UtensilsCrossed size={18} />
-            )}
-          </div>
-          <span className="font-black text-sm lg:text-lg tracking-tight truncate hidden sm:block">
-            {restaurant?.name}
-          </span>
+        {/* Logo or Name */}
+        <Link href={basePath || '/'} className="flex items-center flex-1 lg:flex-none truncate">
+          {restaurant?.logoUrl ? (
+            <img src={restaurant.logoUrl} alt={restaurant.name} className="h-8 lg:h-9 w-auto max-w-40 object-contain shrink-0" />
+          ) : (
+            <span className="font-black text-sm lg:text-lg tracking-tight truncate">
+              {restaurant?.name}
+            </span>
+          )}
         </Link>
 
         {/* Desktop Nav */}
@@ -170,8 +168,8 @@ export function StorefrontHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-bold transition-colors hover:text-primary relative py-1 ${
-                pathname === link.href ? 'text-primary' : 'text-muted-foreground'
+              className={`text-sm font-semibold transition-colors relative py-1 ${
+                pathname === link.href ? 'text-foreground' : 'text-gray-400 hover:text-foreground'
               }`}
             >
               {link.name}
@@ -200,28 +198,24 @@ export function StorefrontHeader() {
               {authed ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-full gap-2 font-bold hover:bg-muted"
-                    >
-                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">
+                    <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                      <div className="w-7 h-7 rounded-full bg-(--color-primary)/10 flex items-center justify-center text-(--color-primary) text-xs font-black">
                         {user?.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="hidden xl:inline">{user?.name}</span>
-                    </Button>
+                      <span className="hidden xl:inline text-sm font-semibold text-gray-700">{user?.name}</span>
+                    </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-xl p-1">
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl p-1.5 bg-white border border-gray-200 shadow-lg">
                     <DropdownMenuItem
-                      className="rounded-lg cursor-pointer font-medium gap-2"
+                      className="rounded-lg cursor-pointer font-medium gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:text-gray-900"
                       onClick={() => router.push(`${basePath}/orders`)}
                     >
-                      <ShoppingCart className="h-4 w-4" />
+                      <ShoppingCart className="h-4 w-4 text-gray-400" />
                       Mis Pedidos
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="my-1 bg-gray-100" />
                     <DropdownMenuItem
-                      className="rounded-lg cursor-pointer font-medium gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                      className="rounded-lg cursor-pointer font-medium gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 focus:bg-red-50 focus:text-red-600"
                       onClick={handleLogout}
                     >
                       <LogOut className="h-4 w-4" />
@@ -230,36 +224,34 @@ export function StorefrontHeader() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button variant="ghost" size="sm" className="rounded-full font-bold" onClick={() => router.push(`${basePath}/auth/login`)}>
-                  Entrar
-                </Button>
+                <>
+                  <button
+                    onClick={() => router.push(`${basePath}/auth/login`)}
+                    className="px-4 py-1.5 text-sm font-semibold text-gray-500 hover:text-foreground rounded-full transition-colors"
+                  >
+                    Entrar
+                  </button>
+                  <button
+                    onClick={() => router.push(`${basePath}/auth/register`)}
+                    className="px-4 py-1.5 text-sm font-semibold text-white bg-(--color-primary) rounded-full hover:opacity-90 active:scale-[0.97] transition-all"
+                  >
+                    Registrarse
+                  </button>
+                </>
               )}
             </div>
           )}
 
-          <div className="flex items-center gap-1.5">
-            {dineIn && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full lg:flex hidden"
-                onClick={() => router.push(`${basePath}/session`)}
-              >
-                <Bell size={20} className="text-muted-foreground" />
-              </Button>
-            )}
-
-            <Link href={`${basePath}/checkout`}>
-              <Button size="icon" className="rounded-full w-10 h-10 shadow-lg shadow-primary/20 relative group overflow-visible">
-                <ShoppingBag size={20} />
-                {cartCount > 0 && (
-                  <Badge className="absolute -top-1.5 -right-1.5 bg-black text-white h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-white group-hover:scale-110 transition-transform">
-                    {cartCount}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
-          </div>
+          {dineIn && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full lg:flex hidden"
+              onClick={() => router.push(`${basePath}/session`)}
+            >
+              <Bell size={20} className="text-muted-foreground" />
+            </Button>
+          )}
         </div>
       </div>
     </header>

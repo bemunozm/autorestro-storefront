@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,13 +9,6 @@ import { z } from 'zod';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useAuthStore } from '@/stores/auth-store';
 import api from '@/lib/api';
-import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -24,9 +17,17 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+// The error message the backend sends for unconfirmed emails (403 EMAIL_NOT_CONFIRMED).
+// The api.ts interceptor wraps all errors into plain Error objects using response.data.message,
+// so we detect the 403 case by matching the message string rather than response.status.
+const EMAIL_NOT_CONFIRMED_MSG = 'Debes confirmar tu correo electrónico antes de iniciar sesión';
+
+const inputClass =
+  'w-full h-11 px-4 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-(--color-primary)/20 focus:border-(--color-primary) transition-shadow';
+
+const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5';
+
 export default function LoginPage() {
-  const params = useParams();
-  const slug = params.slug as string;
   const router = useRouter();
   const searchParams = useSearchParams();
   const { restaurant, basePath } = useRestaurant();
@@ -34,21 +35,29 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginForm) => {
     setError(null);
+    setShowResend(false);
+    setResendSuccess(false);
     setLoading(true);
     try {
       const response = await api.post('/auth/login', data);
       const { access_token, user } = response.data;
       login(access_token, user);
       router.push(returnUrl);
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '';
+      if (message === EMAIL_NOT_CONFIRMED_MSG) {
+        setError('Tu email no ha sido confirmado. Revisa tu bandeja de entrada.');
+        setShowResend(true);
+      } else if (message.toLowerCase().includes('contraseña') || message.toLowerCase().includes('correo')) {
         setError('Email o contraseña incorrectos');
       } else {
         setError('Hubo un error al iniciar sesión');
@@ -58,87 +67,130 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendConfirmation = async () => {
+    const email = watch('email');
+    if (!email) return;
+    try {
+      await api.post('/auth/resend-confirmation', {
+        email,
+        redirectUrl: `${window.location.origin}${basePath}`,
+      });
+      setError(null);
+      setShowResend(false);
+      setResendSuccess(true);
+    } catch {
+      // Silently succeed to prevent email enumeration
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-linear-to-b from-gray-50 to-gray-100">
+      <div className="w-full max-w-sm">
+        {/* Logo or name */}
         <div className="text-center mb-8">
-          {restaurant?.logoUrl && (
-            <img 
-              src={restaurant.logoUrl} 
-              alt={restaurant.name} 
-              className="mx-auto h-20 w-auto mb-4"
+          {restaurant?.logoUrl ? (
+            <img
+              src={restaurant.logoUrl}
+              alt={restaurant?.name}
+              className="h-12 w-auto max-w-48 object-contain mx-auto"
             />
+          ) : (
+            <h1 className="text-2xl font-black tracking-tight text-gray-900">{restaurant?.name}</h1>
           )}
-          <h1 className="text-2xl font-bold text-gray-900">Bienvenido a {restaurant?.name}</h1>
         </div>
 
-        <Card className="shadow-sm border-none rounded-xl">
-          <CardHeader>
-            <CardTitle className="text-xl">Iniciar Sesión</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 sm:p-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Bienvenido</h2>
+            <p className="text-sm text-gray-400 mb-6">Inicia sesión para continuar</p>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
+              <div>
+                <label htmlFor="email" className={labelClass}>
+                  Email
+                </label>
+                <input
                   id="email"
                   type="email"
                   placeholder="tu@correo.com"
+                  autoComplete="email"
+                  className={inputClass}
                   {...register('email')}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="password" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Contraseña
+                  </label>
+                  <Link
+                    href={`${basePath}/auth/forgot-password`}
+                    className="text-xs text-gray-400 hover:text-(--color-primary) transition-colors"
+                  >
+                    ¿La olvidaste?
+                  </Link>
+                </div>
+                <input
                   id="password"
                   type="password"
-                  placeholder="••••••"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  className={inputClass}
                   {...register('password')}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
                 )}
               </div>
 
               {error && (
-                <Alert variant="destructive" className="py-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
+                  {error}
+                </div>
               )}
 
-              <Button 
-                type="submit" 
-                className="w-full text-white" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
+              {showResend && (
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  className="text-sm font-medium text-(--color-primary) hover:underline"
+                >
+                  Reenviar correo de confirmación
+                </button>
+              )}
+
+              {resendSuccess && (
+                <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-sm text-emerald-600">
+                  Correo de confirmación reenviado. Revisa tu bandeja.
+                </div>
+              )}
+
+              <button
+                type="submit"
                 disabled={loading}
+                className="w-full h-11 rounded-xl bg-(--color-primary) text-white text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                {loading ? 'Cargando...' : 'Entrar'}
-              </Button>
+                {loading ? 'Ingresando...' : 'Iniciar sesión'}
+              </button>
             </form>
-          </CardContent>
-          <CardFooter className="flex flex-col items-center gap-3 border-t py-4">
-            <Link
-              href={`${basePath}/auth/forgot-password`}
-              className="text-sm text-gray-500 hover:underline"
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
-            <p className="text-sm text-gray-600">
-              ¿No tienes una cuenta?{' '}
-              <Link
-                href={`${basePath}/auth/register`}
-                className="font-medium hover:underline"
-                style={{ color: 'var(--color-primary)' }}
-              >
-                Regístrate aquí
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-sm text-gray-400">
+          ¿No tienes cuenta?{' '}
+          <Link
+            href={`${basePath}/auth/register`}
+            className="font-medium text-(--color-primary) hover:underline"
+          >
+            Crear cuenta
+          </Link>
+        </p>
       </div>
     </div>
   );

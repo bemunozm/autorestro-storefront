@@ -114,7 +114,8 @@ export default function TableJoinPage() {
     );
   }
 
-  const primaryColor = restaurant?.primaryColor || 'var(--color-primary)';
+  // Use CSS variable set by DynamicTheme (already resolved from landingConfig.theme)
+  const primaryColor = 'var(--color-primary)';
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col justify-center items-center p-4">

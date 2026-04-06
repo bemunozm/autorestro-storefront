@@ -11,6 +11,9 @@ interface CreateOrderPayload {
   sessionId?: string | null;
   tableId?: string | null;
   guestId?: string | null;
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
 }
 
 export function useCreateOrder() {
