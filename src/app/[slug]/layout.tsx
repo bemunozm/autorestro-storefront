@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { RestaurantProvider } from '@/providers/restaurant-provider';
 import { DynamicTheme } from '@/providers/theme-provider';
 import { StorefrontHeader } from '@/components/layout/StorefrontHeader';
+import { FloatingCartButton } from '@/components/menu/FloatingCartButton';
 
 const PLATFORM_DOMAINS = ['autorestro.cl', 'localhost', 'vercel.app'];
 
@@ -32,6 +33,7 @@ export default async function RestaurantLayout({
         <div className="flex-1">
           {children}
         </div>
+        <FloatingCartButton />
       </DynamicTheme>
     </RestaurantProvider>
   );

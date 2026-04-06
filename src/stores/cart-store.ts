@@ -8,9 +8,13 @@ export interface CartItem {
   comment?: string;
 }
 
+type OrderType = 'pickup' | 'delivery' | 'dine_in' | null;
+
 interface CartState {
   items: CartItem[];
   restaurantSlug: string | null;
+  orderType: OrderType;
+  orderNotes: string;
   addItem: (product: Product, quantity: number, comment?: string) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -18,6 +22,8 @@ interface CartState {
   updateItem: (productId: string, updates: { quantity?: number; comment?: string }) => void;
   clearCart: () => void;
   setRestaurantSlug: (slug: string) => void;
+  setOrderType: (type: OrderType) => void;
+  setOrderNotes: (notes: string) => void;
   getTotal: () => number;
   getItemCount: () => number;
 }
@@ -27,6 +33,8 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       restaurantSlug: null,
+      orderType: null,
+      orderNotes: '',
       addItem: (product, quantity, comment) => {
         const { items } = get();
         // If adding from different restaurant, clear cart
@@ -60,7 +68,9 @@ export const useCartStore = create<CartState>()(
           ),
         });
       },
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], orderType: null, orderNotes: '' }),
+      setOrderType: (type) => set({ orderType: type }),
+      setOrderNotes: (notes) => set({ orderNotes: notes }),
       setRestaurantSlug: (slug) => {
         if (get().restaurantSlug !== slug) set({ items: [], restaurantSlug: slug });
         else set({ restaurantSlug: slug });
