@@ -96,7 +96,7 @@ export function ProductCard({ product }: ProductCardProps) {
               className={`hidden md:flex rounded-full transition-all duration-300 ${
                 justAdded
                   ? 'bg-green-500 hover:bg-green-500 text-white gap-1'
-                  : 'bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100'
+                  : 'bg-(--color-primary) hover:bg-(--color-primary) text-white opacity-90 hover:opacity-100'
               }`}
               onClick={handleAdd}
             >

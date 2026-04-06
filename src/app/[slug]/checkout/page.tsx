@@ -27,6 +27,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import { formatPrice } from '@/lib/format';
+import { saveActiveOrder } from '@/lib/guest-orders';
 
 const checkoutSchema = z.object({
   type: z.enum(['pickup', 'delivery', 'dine_in']),
@@ -87,6 +88,7 @@ export default function CheckoutPage() {
   const queryClient = useQueryClient();
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState({ points: 0, amount: 0 });
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [discountApplied, setDiscountApplied] = useState<{ code: string; amount: number } | null>(null);
@@ -135,12 +137,21 @@ export default function CheckoutPage() {
         guestEmail: values.guestEmail,
         guestPhone: values.guestPhone,
       }),
+      paymentMethod,
     };
 
     createOrder(payload, {
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: ['loyalty-balance'] });
         queryClient.invalidateQueries({ queryKey: ['loyalty-transactions'] });
+
+        // Save active order for tracking
+        setSuccessOrderId(data.id);
+        saveActiveOrder({
+          orderId: data.id,
+          orderNumber: data.id.slice(-8).toUpperCase(),
+          slug: restaurant?.slug ?? '',
+        });
 
         if (paymentMethod === 'cash') {
           // Cash: show success immediately
@@ -208,6 +219,14 @@ export default function CheckoutPage() {
               className="w-full h-12 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
             >
               Ver estado de pedidos
+            </button>
+          )}
+          {successOrderId && (
+            <button
+              onClick={() => router.push(`${basePath}/track/${successOrderId}`)}
+              className="w-full h-12 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Ver mi pedido
             </button>
           )}
           {isGuest && (
@@ -424,7 +443,7 @@ export default function CheckoutPage() {
               {isGuest && (
                 <Link href={`${basePath}/auth/register`} className="block mt-4">
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-(--color-primary)/10 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                       <User size={14} className="text-(--color-primary)" />
                     </div>
                     <p className="text-xs text-gray-500">

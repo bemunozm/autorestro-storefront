@@ -150,7 +150,7 @@ export default function OrderTrackingPage() {
                     </Badge>
                   </div>
                   <p className="font-semibold text-gray-900">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice((item.unitPrice ?? item.price ?? 0) * item.quantity)}
                   </p>
                 </div>
               ))}

@@ -39,7 +39,6 @@ export function StorefrontHeader() {
   // Use hasMounted for auth-dependent values to match server render
   const authed = hasMounted && isAuthenticated;
   const dineIn = hasMounted && isDineIn;
-
   const navLinks = useMemo(() => {
     if (dineIn) {
       return [
@@ -224,20 +223,12 @@ export function StorefrontHeader() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <>
-                  <button
-                    onClick={() => router.push(`${basePath}/auth/login`)}
-                    className="px-4 py-1.5 text-sm font-semibold text-gray-500 hover:text-foreground rounded-full transition-colors"
-                  >
-                    Entrar
-                  </button>
-                  <button
-                    onClick={() => router.push(`${basePath}/auth/register`)}
-                    className="px-4 py-1.5 text-sm font-semibold text-white bg-(--color-primary) rounded-full hover:opacity-90 active:scale-[0.97] transition-all"
-                  >
-                    Registrarse
-                  </button>
-                </>
+                <button
+                  onClick={() => router.push(`${basePath}/auth/login`)}
+                  className="px-4 py-1.5 text-sm font-semibold text-white bg-(--color-primary) rounded-full hover:opacity-90 active:scale-[0.97] transition-all"
+                >
+                  Ingresar
+                </button>
               )}
             </div>
           )}

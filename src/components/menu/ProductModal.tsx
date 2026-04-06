@@ -153,7 +153,7 @@ function ModalContent({
               className={`flex-1 h-11 rounded-full font-bold text-sm transition-all duration-300 ${
                 addedSuccess
                   ? 'bg-emerald-500 hover:bg-emerald-500 text-white scale-[1.02]'
-                  : 'bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100'
+                  : 'bg-(--color-primary) hover:bg-(--color-primary) text-white opacity-90 hover:opacity-100'
               }`}
               onClick={onAddToCart}
               disabled={addedSuccess}
@@ -215,7 +215,7 @@ function ModalContent({
               className={`flex-1 h-12 rounded-full font-bold text-sm transition-all duration-300 ${
                 addedSuccess
                   ? 'bg-emerald-500 hover:bg-emerald-500 text-white scale-[1.02]'
-                  : 'bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100'
+                  : 'bg-(--color-primary) hover:bg-(--color-primary) text-white opacity-90 hover:opacity-100'
               }`}
               onClick={onAddToCart}
               disabled={addedSuccess}
@@ -260,7 +260,7 @@ function ModalContent({
           className={`flex-1 h-12 rounded-full font-bold text-sm transition-all duration-300 ${
             addedSuccess
               ? 'bg-emerald-500 hover:bg-emerald-500 text-white scale-[1.02]'
-              : 'bg-(--color-primary) hover:bg-(--color-primary) opacity-90 hover:opacity-100'
+              : 'bg-(--color-primary) hover:bg-(--color-primary) text-white opacity-90 hover:opacity-100'
           }`}
           onClick={onAddToCart}
           disabled={addedSuccess}
