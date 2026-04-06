@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import { useRestaurant } from '@/providers/restaurant-provider';
+import { getActiveOrder } from '@/lib/guest-orders';
 import api from '@/lib/api';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PaymentConfirmPage() {
   const searchParams = useSearchParams();
+  const params = useParams();
+  const slug = params.slug as string;
   const { basePath } = useRestaurant();
   const tokenWs = searchParams.get('token_ws');
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
@@ -21,7 +24,7 @@ export default function PaymentConfirmPage() {
 
     api.post('/payments/transbank/confirm', { token_ws: tokenWs })
       .then((res) => {
-        setStatus(res.data.status === 'CONFIRMED' ? 'success' : 'failed');
+        setStatus(res.data.status === 'confirmed' ? 'success' : 'failed');
       })
       .catch(() => setStatus('failed'));
   }, [tokenWs]);
@@ -43,11 +46,26 @@ export default function PaymentConfirmPage() {
             </div>
             <h1 className="text-xl font-bold text-gray-900 mb-2">¡Pago confirmado!</h1>
             <p className="text-sm text-gray-500 mb-6">Tu pedido ha sido procesado exitosamente.</p>
-            <Link href={`${basePath}/menu`}>
-              <button className="w-full h-11 rounded-xl bg-(--color-primary) text-white text-sm font-semibold hover:opacity-90 transition-all">
-                Volver al menú
-              </button>
-            </Link>
+            <div className="space-y-3">
+              {(() => {
+                const activeOrder = getActiveOrder(slug);
+                if (activeOrder) {
+                  return (
+                    <Link href={`${basePath}/track/${activeOrder.orderId}`}>
+                      <button className="w-full h-11 rounded-xl bg-(--color-primary) text-white text-sm font-semibold hover:opacity-90 transition-all">
+                        Ver mi pedido
+                      </button>
+                    </Link>
+                  );
+                }
+                return null;
+              })()}
+              <Link href={`${basePath}/menu`}>
+                <button className="w-full h-11 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors">
+                  Volver al menú
+                </button>
+              </Link>
+            </div>
           </div>
         )}
 
