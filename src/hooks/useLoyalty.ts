@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useRestaurant } from '@/providers/restaurant-provider';
 import { useAuthStore } from '@/stores/auth-store';
-import type { LoyaltyProgram, LoyaltyBalance, LoyaltyTransaction } from '@/types/loyalty';
+import type { LoyaltyProgram, LoyaltyBalance, LoyaltyTransaction, LoyaltyReward } from '@/types/loyalty';
 
 export function useLoyaltyProgram() {
   const { slug, restaurant } = useRestaurant();
@@ -43,5 +43,35 @@ export function useLoyaltyTransactions(limit = 20) {
     },
     enabled: !!slug && !!restaurant && isAuthenticated,
     staleTime: 30 * 1000,
+  });
+}
+
+export function useLoyaltyRewards() {
+  const { restaurant } = useRestaurant();
+  const slug = restaurant?.slug;
+  return useQuery<LoyaltyReward[]>({
+    queryKey: ['loyalty-rewards', slug],
+    queryFn: () => api.get<LoyaltyReward[]>(`/storefront/${slug}/loyalty/rewards`).then(r => r.data),
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useRedeemDiscountReward() {
+  const { slug } = useRestaurant();
+  const queryClient = useQueryClient();
+
+  return useMutation<{ promoCode: string }, Error, { rewardId: string }>({
+    mutationFn: async ({ rewardId }) => {
+      const { data } = await api.post<{ promoCode: string }>(
+        `/storefront/${slug}/loyalty/redeem-discount`,
+        { rewardId }
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loyalty-balance', slug] });
+      queryClient.invalidateQueries({ queryKey: ['loyalty-transactions', slug] });
+    },
   });
 }

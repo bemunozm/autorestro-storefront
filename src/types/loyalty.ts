@@ -1,3 +1,14 @@
+export interface MultiplierEvent {
+  name: string;
+  multiplier: number;
+  daysOfWeek?: number[];
+  startTime?: string;   // HH:mm
+  endTime?: string;     // HH:mm
+  startDate?: string;   // YYYY-MM-DD
+  endDate?: string;     // YYYY-MM-DD
+  isActive: boolean;
+}
+
 export interface LoyaltyProgram {
   id: string;
   restaurantId: string;
@@ -7,6 +18,11 @@ export interface LoyaltyProgram {
   welcomeBonus: number;
   minimumRedemption: number;
   tiers: LoyaltyTier[] | null;
+  multiplierEvents: MultiplierEvent[] | null;
+  birthdayBonus: number;
+  pointsExpirationMonths: number | null;
+  lastPeriodReset: string | null;  // ISO date string
+  createdAt: string;               // ISO date string
 }
 
 export interface LoyaltyTier {
@@ -29,4 +45,20 @@ export interface LoyaltyTransaction {
   points: number;
   description: string | null;
   createdAt: string;
+}
+
+export interface LoyaltyReward {
+  id: string;
+  restaurantId: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  pointsCost: number;
+  productId: string | null;
+  productIds: string[];
+  isActive: boolean;
+  sortOrder: number;
+  type: 'product' | 'discount' | 'promo';
+  discountType: 'percentage' | 'fixed' | null;
+  discountValue: number | null;
 }
