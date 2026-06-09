@@ -9,7 +9,7 @@ import api from '@/lib/api';
 import { Order, OrderItem } from '@/types/order';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Clock, ChefHat, Package, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, ChefHat, Package, XCircle, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 
@@ -143,15 +143,25 @@ export default function OrderTrackingPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-900">{item.quantity}x</span>
                       <p className="font-medium text-gray-800">{item.productName || 'Producto'}</p>
+                      {item.isLoyaltyReward && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/60 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                          <Star size={9} className="text-amber-500" />
+                          {item.pointsCost ? `${item.pointsCost} pts` : 'Recompensa'}
+                        </span>
+                      )}
                     </div>
                     {item.comment && <p className="text-xs text-gray-500 italic">&quot;{item.comment}&quot;</p>}
                     <Badge variant="outline" className={cn("text-[10px] font-medium h-5", ITEM_STATUS_CONFIG[item.status as keyof typeof ITEM_STATUS_CONFIG]?.color)}>
                       {ITEM_STATUS_CONFIG[item.status as keyof typeof ITEM_STATUS_CONFIG]?.label}
                     </Badge>
                   </div>
-                  <p className="font-semibold text-gray-900">
-                    {formatPrice((item.unitPrice ?? item.price ?? 0) * item.quantity)}
-                  </p>
+                  {item.isLoyaltyReward ? (
+                    <span className="text-xs font-semibold text-amber-600">Canjeado</span>
+                  ) : (
+                    <p className="font-semibold text-gray-900">
+                      {formatPrice((item.unitPrice ?? item.price ?? 0) * item.quantity)}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

@@ -1,9 +1,10 @@
 'use client';
 
 import { useCartStore } from '@/stores/cart-store';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, UtensilsCrossed } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { formatPrice } from '@/lib/format';
 import { getActiveOrdersForSlug } from '@/lib/guest-orders';
@@ -19,7 +20,7 @@ export function FloatingCartButton() {
   const prevCount = useRef(itemCount);
   const pathname = usePathname();
 
-  const { slug } = useRestaurant();
+  const { slug, basePath } = useRestaurant();
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => { setHasMounted(true); }, []);
@@ -36,12 +37,58 @@ export function FloatingCartButton() {
   if (!hasMounted) return null;
   if (pathname?.includes('/checkout')) return null;
   if (pathname?.includes('/auth/')) return null;
+  if (pathname?.includes('/track/')) return null;
 
   const isEmpty = itemCount === 0;
 
   const hasActiveOrders = slug && !isAuthenticated
     ? getActiveOrdersForSlug(slug).length > 0
     : false;
+
+  const normalizedBase = basePath ?? '';
+  const isLanding =
+    pathname === normalizedBase ||
+    pathname === `${normalizedBase}/` ||
+    (normalizedBase === '' && (pathname === '/' || pathname === ''));
+
+  if (isLanding && isEmpty) {
+    return (
+      <>
+        {/* Mobile */}
+        <Link
+          href={`${normalizedBase}/menu`}
+          className="lg:hidden fixed bottom-4 right-4 z-50 mb-[env(safe-area-inset-bottom)]"
+        >
+          <button className="flex items-center gap-2 px-5 h-14 rounded-full bg-(--color-primary) text-white shadow-lg active:scale-95 transition-all relative">
+            <UtensilsCrossed size={18} />
+            <span className="text-sm font-bold">Ver Menú</span>
+            {hasActiveOrders && (
+              <span className="absolute top-0.5 right-0.5 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white" />
+              </span>
+            )}
+          </button>
+        </Link>
+        {/* Desktop */}
+        <Link
+          href={`${normalizedBase}/menu`}
+          className="hidden lg:block fixed bottom-6 right-6 z-50"
+        >
+          <button className="flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-(--color-primary) text-white shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:scale-105 active:scale-95 transition-all relative">
+            <UtensilsCrossed size={18} />
+            <span className="text-sm font-bold">Ver Menú</span>
+            {hasActiveOrders && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white" />
+              </span>
+            )}
+          </button>
+        </Link>
+      </>
+    );
+  }
 
   return (
     <>

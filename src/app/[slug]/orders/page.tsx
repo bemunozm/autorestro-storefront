@@ -8,7 +8,7 @@ import { useRestaurant } from '@/providers/restaurant-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, ChevronRight, Calendar } from 'lucide-react';
+import { ShoppingBag, ChevronRight, Calendar, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Order } from '@/types/order';
 import { formatPrice } from '@/lib/format';
@@ -93,7 +93,15 @@ export default function OrdersPage() {
                         <Badge className={cn("text-[10px] font-medium h-5", STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG]?.color)}>
                           {STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG]?.label}
                         </Badge>
-                        <p className="text-[10px] text-gray-400">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</p>
+                        <div className="flex items-center gap-1.5">
+                          {order.items.some((i) => i.isLoyaltyReward) && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600">
+                              <Star size={9} className="text-amber-500" />
+                              Recompensa
+                            </span>
+                          )}
+                          <p className="text-[10px] text-gray-400">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</p>
+                        </div>
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-gray-300" />

@@ -119,34 +119,48 @@ function CompactStepper({ steps, stepIndex }: { steps: Step[]; stepIndex: number
       {steps.map((step, idx) => {
         const isActive = idx <= stepIndex;
         const isCurrent = idx === stepIndex;
+        const isCompleted = isActive && !isCurrent;
         const StepIcon = step.icon;
         return (
           <React.Fragment key={step.key}>
             <div className="flex flex-col items-center gap-1">
-              <div
-                className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300',
-                  isCurrent
-                    ? 'bg-(--color-primary) text-white'
-                    : isActive
-                      ? 'bg-(--color-primary)/15 text-(--color-primary)'
-                      : 'bg-gray-100 text-gray-300',
+              <div className="relative flex items-center justify-center">
+                {isCurrent && (
+                  <span className="absolute inline-flex w-9 h-9 rounded-full bg-(--color-primary) opacity-30 animate-ping" />
                 )}
-              >
-                <StepIcon size={12} />
+                <div
+                  className={cn(
+                    'relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300',
+                    isCurrent
+                      ? 'bg-(--color-primary) text-white'
+                      : isCompleted
+                        ? 'bg-primary/20 text-(--color-primary)'
+                        : 'bg-gray-100 text-gray-300',
+                  )}
+                >
+                  {isCompleted ? (
+                    <CheckCircle2 size={14} />
+                  ) : (
+                    <StepIcon size={isCurrent ? 15 : 14} />
+                  )}
+                </div>
               </div>
               <span
                 className={cn(
-                  'text-[9px] font-medium text-center leading-tight w-12',
-                  isActive ? 'text-gray-700' : 'text-gray-400',
+                  'text-[10px] text-center leading-tight w-14',
+                  isCurrent
+                    ? 'font-bold text-gray-900'
+                    : isActive
+                      ? 'font-medium text-gray-600'
+                      : 'font-medium text-gray-400',
                 )}
               >
                 {step.label}
               </span>
             </div>
             {idx < steps.length - 1 && (
-              <div className="flex-1 mt-3.5 mx-0.5">
-                <div className="h-px w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="flex-1 mt-4.5 mx-0.5">
+                <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-(--color-primary) rounded-full transition-all duration-500"
                     style={{ width: idx < stepIndex ? '100%' : '0%' }}
@@ -210,14 +224,14 @@ function OrderCard({ activeOrder, slug, basePath, onClose }: OrderCardProps) {
   const orderNumber = order.orderNumber ?? order.id.slice(-8).toUpperCase();
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
+    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <p className="text-sm font-black text-gray-900 font-mono tracking-wider">
+          <p className="text-base font-black text-gray-900 font-mono tracking-wider">
             #{orderNumber}
           </p>
-          <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', statusConfig.color)}>
+          <span className={cn('text-[11px] font-semibold px-2.5 py-1 rounded-full', statusConfig.color)}>
             {statusConfig.label}
           </span>
         </div>
@@ -242,7 +256,7 @@ function OrderCard({ activeOrder, slug, basePath, onClose }: OrderCardProps) {
           <>
             <CompactStepper steps={steps} stepIndex={stepIndex} />
             {statusMessage && (
-              <p className="text-[10px] text-gray-400 text-center mt-1.5">{statusMessage}</p>
+              <p className="text-[11px] font-medium text-gray-400 text-center mt-1.5">{statusMessage}</p>
             )}
           </>
         )}
@@ -256,13 +270,13 @@ function OrderCard({ activeOrder, slug, basePath, onClose }: OrderCardProps) {
             className="flex items-center gap-2.5 px-4 py-2 border-b border-gray-50 last:border-b-0"
           >
             {item.productImage ? (
-              <div className="relative w-8 h-8 rounded-md overflow-hidden bg-gray-100 shrink-0">
+              <div className="relative w-10 h-10 rounded-md overflow-hidden bg-gray-100 shrink-0">
                 <Image src={item.productImage} alt={item.productName ?? ''} fill className="object-cover" />
               </div>
             ) : (
               <div className={cn('w-1.5 h-1.5 rounded-full shrink-0', ITEM_STATUS_DOT[item.status] ?? 'bg-gray-300')} />
             )}
-            <p className="text-xs text-gray-700 flex-1 min-w-0 truncate">
+            <p className="text-sm text-gray-700 flex-1 min-w-0 truncate">
               <span className="font-semibold">{item.quantity}x</span> {item.productName ?? 'Producto'}
             </p>
             <p className="text-xs text-gray-400 font-medium shrink-0 tabular-nums">
@@ -275,7 +289,7 @@ function OrderCard({ activeOrder, slug, basePath, onClose }: OrderCardProps) {
       {/* Total */}
       <div className="px-4 py-2.5 bg-gray-50 flex items-center justify-between border-t border-gray-100">
         <span className="text-xs text-gray-500 font-medium">Total</span>
-        <span className="text-sm font-bold text-gray-900">{formatPrice(order.total ?? 0)}</span>
+        <span className="text-base font-black text-gray-900">{formatPrice(order.total ?? 0)}</span>
       </div>
     </div>
   );
@@ -387,8 +401,8 @@ export function OrderTrackingTab({
   if (activeOrders.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-        <div className="bg-gray-100 p-5 rounded-full mb-4">
-          <Package size={36} className="text-gray-300" />
+        <div className="bg-gray-100 p-6 rounded-full mb-4">
+          <Package size={42} className="text-gray-300" />
         </div>
         <h3 className="text-base font-bold text-gray-900 mb-1">
           Sin pedidos activos

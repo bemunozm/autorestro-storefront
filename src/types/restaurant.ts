@@ -1,3 +1,14 @@
+export interface DeliveryZone {
+  name: string;
+  fee: number;
+}
+
+export interface DeliveryConfig {
+  zones: DeliveryZone[];
+  freeDeliveryMinimum: number | null;
+  estimatedDeliveryTime: number | null;
+}
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -14,6 +25,7 @@ export interface Restaurant {
   isPro?: boolean;
   landingConfig?: LandingConfig;
   assignedTemplates?: string[];
+  deliveryConfig?: DeliveryConfig;
 }
 
 export interface LandingConfig {

@@ -15,6 +15,8 @@ interface CreateOrderPayload {
   guestEmail?: string;
   guestPhone?: string;
   paymentMethod?: string;
+  promoCode?: string;
+  discountId?: string;
 }
 
 export function useCreateOrder() {
