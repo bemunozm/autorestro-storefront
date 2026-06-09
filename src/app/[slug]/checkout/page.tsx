@@ -2,10 +2,11 @@
 
 import { useCartStore } from '@/stores/cart-store';
 import { useRestaurant } from '@/providers/restaurant-provider';
+import api from '@/lib/api';
 import { useCreateOrder } from '@/hooks/useCreateOrder';
 import { useDineInMode } from '@/hooks/useDineInMode';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,8 +19,9 @@ import {
   UtensilsCrossed,
   User,
   Tag,
+  Star,
 } from 'lucide-react';
-import { LoyaltyRedemption } from '@/components/loyalty/LoyaltyRedemption';
+import { useLoyaltyProgram } from '@/hooks/useLoyalty';
 import { PaymentMethodSelector } from '@/components/checkout/PaymentMethodSelector';
 import { useInitPayment } from '@/hooks/useInitPayment';
 import { useAuthStore } from '@/stores/auth-store';
@@ -77,7 +79,7 @@ const labelClass = 'block text-xs font-semibold text-gray-400 uppercase tracking
 const sectionHeaderClass = 'text-xs font-bold text-gray-400 uppercase tracking-wider mb-3';
 
 export default function CheckoutPage() {
-  const { items, getTotal, clearCart, getItemCount } = useCartStore();
+  const { items, getTotal, clearCart, getItemCount, getLoyaltyItems } = useCartStore();
   const { restaurant, basePath } = useRestaurant();
   const { isDineIn, sessionId, tableId } = useDineInMode();
   const router = useRouter();
@@ -89,11 +91,21 @@ export default function CheckoutPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
-  const [loyaltyDiscount, setLoyaltyDiscount] = useState({ points: 0, amount: 0 });
   const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [discountApplied, setDiscountApplied] = useState<{ code: string; amount: number } | null>(null);
+  const [discountApplied, setDiscountApplied] = useState<{
+    code: string;
+    amount: number;
+    name: string;
+    discountId?: string;
+    isAuto?: boolean;
+  } | null>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
   const [discountError, setDiscountError] = useState<string | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string>('');
+
+  const { data: program } = useLoyaltyProgram();
+
+  const loyaltyItems = getLoyaltyItems();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -106,21 +118,97 @@ export default function CheckoutPage() {
 
   const orderType = watch('type');
 
+  // Delivery fee — calculated client-side for display; server also calculates it authoritatively
+  const deliveryConfig = restaurant?.deliveryConfig;
+  const zones = deliveryConfig?.zones ?? [];
+  const paidSubtotal = getTotal();
+  const deliveryFee = (() => {
+    if (orderType !== 'delivery' || !deliveryConfig || zones.length === 0) return 0;
+    const zone = zones.length === 1
+      ? zones[0]
+      : zones.find((z) => z.name === selectedZone);
+    if (!zone) return 0;
+    if (deliveryConfig.freeDeliveryMinimum != null && paidSubtotal >= deliveryConfig.freeDeliveryMinimum) return 0;
+    return zone.fee;
+  })();
+
+  // getTotal() already excludes loyalty items (price = 0)
+  const finalTotal = Math.max(0, paidSubtotal - (discountApplied?.amount ?? 0) + deliveryFee);
+
   useEffect(() => {
     if (getItemCount() === 0 && !isSuccess) {
       router.push(`${basePath}/menu`);
     }
   }, [items, router, basePath, getItemCount, isSuccess]);
 
+  // Auto-apply discount (no promo code needed)
+  // discountApplied is intentionally excluded from deps to avoid infinite loops;
+  // we read its current value via ref.
+  const discountAppliedRef = useRef(discountApplied);
+  discountAppliedRef.current = discountApplied;
+
+  // Tracks when the user explicitly dismisses an auto-discount so it doesn't re-apply
+  // until the cart actually changes (items or subtotal).
+  const userDismissedAutoRef = useRef(false);
+
+  useEffect(() => {
+    // Reset the dismiss flag whenever the cart items or subtotal changes
+    userDismissedAutoRef.current = false;
+  }, [paidSubtotal, items]);
+
+  useEffect(() => {
+    // Don't auto-apply if user already has a manual (non-auto) discount
+    if (discountAppliedRef.current && !discountAppliedRef.current.isAuto) return;
+    // Don't re-apply if user just dismissed this session's auto discount
+    if (userDismissedAutoRef.current) return;
+    if (!restaurant?.slug || paidSubtotal <= 0) {
+      if (discountAppliedRef.current?.isAuto) setDiscountApplied(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const productIds = items.filter(i => !i.isLoyaltyReward).map(i => i.product.id);
+    const categoryIds = [...new Set(
+      items.filter(i => !i.isLoyaltyReward && i.product.categoryId).map(i => i.product.categoryId!)
+    )];
+
+    api.get(`/storefront/${restaurant.slug}/auto-discounts`, {
+      params: {
+        orderAmount: paidSubtotal,
+        productIds: productIds.join(','),
+        categoryIds: categoryIds.join(','),
+      },
+      signal: controller.signal,
+    }).then(({ data }) => {
+      if (data.applicable && data.discountAmount > 0) {
+        setDiscountApplied({
+          code: '',
+          amount: data.discountAmount,
+          name: data.discountName,
+          discountId: data.discountId,
+          isAuto: true,
+        });
+      } else if (discountAppliedRef.current?.isAuto) {
+        setDiscountApplied(null);
+      }
+    }).catch(() => {
+      // Silent fail for auto-apply
+    });
+
+    return () => controller.abort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paidSubtotal, items, restaurant?.slug]);
+
   const onSubmit = (values: CheckoutFormValues) => {
-    if (!paymentMethod) {
+    if (finalTotal > 0 && !paymentMethod) {
       setError('Selecciona un método de pago');
       return;
     }
 
     const payload = {
       type: values.type,
-      items: items.map(item => ({
+      // Only send paid (non-loyalty) items as regular order items
+      items: items.filter(i => !i.isLoyaltyReward).map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
         comment: item.comment,
@@ -130,14 +218,28 @@ export default function CheckoutPage() {
       customerNotes: values.customerNotes,
       sessionId: isDineIn ? sessionId : null,
       tableId: isDineIn ? tableId : null,
-      ...(loyaltyDiscount.points > 0 && { loyaltyPoints: loyaltyDiscount.points }),
+      // Send loyalty rewards as a separate field for the backend to process point deduction
+      ...(loyaltyItems.length > 0 && {
+        loyaltyRewards: loyaltyItems.map(i => ({
+          rewardId: i.rewardId!,
+          quantity: i.quantity,
+        })),
+      }),
       // Guest fields — only sent when user is not authenticated and not in dine-in mode
       ...(isGuest && {
         guestName: values.guestName,
         guestEmail: values.guestEmail,
         guestPhone: values.guestPhone,
       }),
-      paymentMethod,
+      // Manual discount → send promoCode; auto-applied → send discountId
+      ...(discountApplied && !discountApplied.isAuto && discountApplied.code && { promoCode: discountApplied.code }),
+      ...(discountApplied?.isAuto && discountApplied.discountId && { discountId: discountApplied.discountId }),
+      // Delivery zone name for fee lookup
+      ...(orderType === 'delivery' && zones.length > 0 && {
+        deliveryZone: zones.length === 1 ? zones[0].name : selectedZone,
+      }),
+      // Don't send paymentMethod when fully covered by discount
+      ...(finalTotal > 0 && { paymentMethod }),
     };
 
     createOrder(payload, {
@@ -153,8 +255,8 @@ export default function CheckoutPage() {
           slug: restaurant?.slug ?? '',
         });
 
-        if (paymentMethod === 'cash') {
-          // Cash: show success immediately
+        if (paymentMethod === 'cash' || finalTotal === 0) {
+          // Cash or fully covered by loyalty/discount: show success immediately
           setIsSuccess(true);
           confetti({
             particleCount: 150,
@@ -405,6 +507,28 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Delivery zone selector */}
+                {!isDineIn && orderType === 'delivery' && zones.length > 1 && (
+                  <div>
+                    <label className={labelClass}>Zona de entrega</label>
+                    <select
+                      value={selectedZone}
+                      onChange={(e) => setSelectedZone(e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="">Selecciona tu zona</option>
+                      {zones.map((z) => (
+                        <option key={z.name} value={z.name}>
+                          {z.name} — {z.fee === 0 ? 'Gratis' : `$${z.fee.toLocaleString('es-CL')}`}
+                        </option>
+                      ))}
+                    </select>
+                    {!selectedZone && (
+                      <p className="text-xs text-amber-600 mt-1">Selecciona tu zona para calcular el costo de envío</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Phone for authenticated non-dine-in users */}
                 {!isDineIn && !isGuest && (
                   <div>
@@ -458,74 +582,108 @@ export default function CheckoutPage() {
             {/* Discount code */}
             <div>
               <h2 className={sectionHeaderClass}>Código de descuento</h2>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ingresa tu código"
-                  className={`${inputClass} flex-1`}
-                  {...register('discountCode')}
-                  disabled={!!discountApplied}
-                />
-                {discountApplied ? (
-                  <button
-                    type="button"
-                    onClick={() => { setDiscountApplied(null); setDiscountError(null); setValue('discountCode', ''); }}
-                    className="px-4 h-11 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors shrink-0"
-                  >
-                    Quitar
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={discountLoading}
-                    onClick={() => {
-                      const code = watch('discountCode');
-                      if (!code) return;
-                      setDiscountLoading(true);
-                      setDiscountError(null);
-                      // TODO: call backend endpoint to validate discount code
-                      // For now, show as not found
-                      setTimeout(() => {
-                        setDiscountError('Código no válido o expirado');
-                        setDiscountLoading(false);
-                      }, 500);
-                    }}
-                    className="px-4 h-11 rounded-xl bg-(--color-primary) text-white text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all shrink-0 disabled:opacity-50"
-                  >
-                    {discountLoading ? <Loader2 size={16} className="animate-spin" /> : <Tag size={16} />}
-                  </button>
-                )}
-              </div>
-              {discountApplied && (
-                <p className="text-xs text-emerald-600 font-medium mt-2">
-                  Código &quot;{discountApplied.code}&quot; aplicado · -{formatPrice(discountApplied.amount)}
-                </p>
-              )}
-              {discountError && (
-                <p className="text-xs text-red-500 mt-2">{discountError}</p>
+
+              {discountApplied?.isAuto ? (
+                // Auto-applied discount: show info row, hide input
+                <div className="flex items-center justify-between text-sm py-1">
+                  <span className="text-emerald-600 font-medium">{discountApplied.name} (automático)</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-600 font-semibold">-{formatPrice(discountApplied.amount)}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        userDismissedAutoRef.current = true;
+                        setDiscountApplied(null);
+                        setDiscountError(null);
+                      }}
+                      className="text-xs text-gray-400 underline hover:text-gray-600 transition-colors"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Manual discount input
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ingresa tu código"
+                      className={`${inputClass} flex-1`}
+                      {...register('discountCode')}
+                      disabled={!!discountApplied}
+                    />
+                    {discountApplied ? (
+                      <button
+                        type="button"
+                        onClick={() => { setDiscountApplied(null); setDiscountError(null); setValue('discountCode', ''); }}
+                        className="px-4 h-11 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors shrink-0"
+                      >
+                        Quitar
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={discountLoading}
+                        onClick={async () => {
+                          const code = watch('discountCode');
+                          if (!code?.trim()) return;
+                          setDiscountLoading(true);
+                          setDiscountError(null);
+                          try {
+                            const { data } = await api.post<{ applicable: boolean; discountAmount: number; discountName: string }>(
+                              `/storefront/${restaurant?.slug}/validate-discount`,
+                              {
+                                promoCode: code.trim(),
+                                orderAmount: paidSubtotal,
+                                productIds: items.filter(i => !i.isLoyaltyReward).map(i => i.product.id),
+                                categoryIds: [...new Set(
+                                  items
+                                    .filter(i => !i.isLoyaltyReward && i.product.categoryId)
+                                    .map(i => i.product.categoryId!)
+                                )],
+                              }
+                            );
+                            if (data.applicable) {
+                              setDiscountApplied({ code: code.trim(), amount: data.discountAmount, name: data.discountName });
+                            } else {
+                              setDiscountError('Código no válido o expirado');
+                            }
+                          } catch {
+                            setDiscountError('Error al validar el código');
+                          } finally {
+                            setDiscountLoading(false);
+                          }
+                        }}
+                        className="px-4 h-11 rounded-xl bg-(--color-primary) text-white text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all shrink-0 disabled:opacity-50"
+                      >
+                        {discountLoading ? <Loader2 size={16} className="animate-spin" /> : <Tag size={16} />}
+                      </button>
+                    )}
+                  </div>
+                  {discountApplied && (
+                    <p className="text-xs text-emerald-600 font-medium mt-2">
+                      {discountApplied.name} aplicado · -{formatPrice(discountApplied.amount)}
+                    </p>
+                  )}
+                  {discountError && (
+                    <p className="text-xs text-red-500 mt-2">{discountError}</p>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Payment method */}
-            <div>
-              <h2 className={sectionHeaderClass}>Método de pago</h2>
-              <PaymentMethodSelector
-                orderType={orderType}
-                value={paymentMethod}
-                onChange={(method) => {
-                  setPaymentMethod(method);
-                  setError(null);
-                }}
-              />
-            </div>
-
-            {/* Loyalty — authenticated non-dine-in only */}
-            {isAuthenticated && !isDineIn && (
+            {/* Payment method — hidden when fully covered by loyalty/discount */}
+            {finalTotal > 0 && (
               <div>
-                <LoyaltyRedemption
-                  appliedPoints={loyaltyDiscount.points}
-                  onRedeem={(points, amount) => setLoyaltyDiscount({ points, amount })}
-                  onClear={() => setLoyaltyDiscount({ points: 0, amount: 0 })}
+                <h2 className={sectionHeaderClass}>Método de pago</h2>
+                <PaymentMethodSelector
+                  orderType={orderType}
+                  value={paymentMethod}
+                  onChange={(method) => {
+                    setPaymentMethod(method);
+                    setError(null);
+                  }}
                 />
               </div>
             )}
@@ -535,26 +693,68 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium">{formatPrice(getTotal())}</span>
+                  <span className="font-medium">{formatPrice(paidSubtotal)}</span>
                 </div>
                 {discountApplied && (
                   <div className="flex items-center justify-between text-sm text-emerald-600">
-                    <span>Código &quot;{discountApplied.code}&quot;</span>
-                    <span>-{formatPrice(discountApplied.amount)}</span>
+                    <span className="truncate mr-2">{discountApplied.name}</span>
+                    <span className="shrink-0">-{formatPrice(discountApplied.amount)}</span>
                   </div>
                 )}
-                {loyaltyDiscount.amount > 0 && (
-                  <div className="flex items-center justify-between text-sm text-emerald-600">
-                    <span>Descuento puntos</span>
-                    <span>-{formatPrice(loyaltyDiscount.amount)}</span>
+                {loyaltyItems.length > 0 && (
+                  <div className="space-y-1">
+                    {loyaltyItems.map(item => (
+                      <div key={item.rewardId} className="flex items-center justify-between text-sm text-amber-600">
+                        <span className="flex items-center gap-1.5">
+                          <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" />
+                          {item.quantity}x {item.product.name}
+                        </span>
+                        <span className="font-semibold">{(item.pointsCost ?? 0) * item.quantity} pts</span>
+                      </div>
+                    ))}
                   </div>
+                )}
+                {orderType === 'delivery' && deliveryConfig && zones.length > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">
+                      Delivery{zones.length > 1 && selectedZone ? ` (${selectedZone})` : zones.length === 1 ? ` (${zones[0].name})` : ''}
+                    </span>
+                    {(() => {
+                      const activeZone = zones.length === 1 ? zones[0] : zones.find((z) => z.name === selectedZone);
+                      if (!activeZone) return <span className="text-gray-400 text-xs">Selecciona zona</span>;
+                      if (deliveryFee === 0 && activeZone.fee > 0) {
+                        return (
+                          <span className="flex items-center gap-1.5 text-emerald-600 font-medium">
+                            Gratis
+                            <span className="line-through text-gray-400 font-normal text-xs">
+                              {formatPrice(activeZone.fee)}
+                            </span>
+                          </span>
+                        );
+                      }
+                      return <span className="font-medium">{deliveryFee === 0 ? 'Gratis' : formatPrice(deliveryFee)}</span>;
+                    })()}
+                  </div>
+                )}
+                {orderType === 'delivery' && deliveryConfig?.estimatedDeliveryTime && (
+                  <p className="text-[11px] text-gray-400">
+                    Tiempo estimado: ~{deliveryConfig.estimatedDeliveryTime} min
+                  </p>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                   <span className="font-bold text-gray-900">Total</span>
                   <span className="text-xl font-bold text-(--color-primary)">
-                    {formatPrice(Math.max(0, getTotal() - loyaltyDiscount.amount - (discountApplied?.amount ?? 0)))}
+                    {formatPrice(finalTotal)}
                   </span>
                 </div>
+                {program?.isActive && isAuthenticated && finalTotal > 0 && (
+                  <div className="flex items-center justify-between text-xs text-amber-600 mt-2">
+                    <span className="flex items-center gap-1">
+                      <Star size={12} className="fill-amber-400 text-amber-400" />
+                      Ganarás {Math.floor(finalTotal * (program.pointsPerCurrencyUnit ?? 0))} puntos
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -571,10 +771,12 @@ export default function CheckoutPage() {
                     <Loader2 className="animate-spin" size={20} />
                     {isInitingPayment ? 'Redirigiendo al pago...' : 'Procesando...'}
                   </>
+                ) : finalTotal === 0 ? (
+                  'Confirmar pedido (cubierto con puntos)'
                 ) : paymentMethod === 'cash' ? (
-                  `Confirmar · ${formatPrice(Math.max(0, getTotal() - loyaltyDiscount.amount - (discountApplied?.amount ?? 0)))}`
+                  `Confirmar · ${formatPrice(finalTotal)}`
                 ) : paymentMethod ? (
-                  `Pagar · ${formatPrice(Math.max(0, getTotal() - loyaltyDiscount.amount - (discountApplied?.amount ?? 0)))}`
+                  `Pagar · ${formatPrice(finalTotal)}`
                 ) : (
                   'Selecciona un método de pago'
                 )}

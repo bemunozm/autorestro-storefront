@@ -8,6 +8,8 @@ export interface OrderItem {
   comment?: string;
   status: 'pending' | 'in_preparation' | 'ready' | 'delivered';
   price?: number; // keep for backward compat with existing pages
+  isLoyaltyReward?: boolean;
+  pointsCost?: number | null;
 }
 
 export interface Order {
